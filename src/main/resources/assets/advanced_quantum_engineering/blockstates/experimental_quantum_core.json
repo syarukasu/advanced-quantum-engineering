@@ -1,0 +1,29 @@
+{
+  "variants": {
+    "formed=false,powered=false,multiblocked=false": {
+      "model": "advanced_quantum_engineering:block/experimental_quantum_core"
+    },
+    "formed=false,powered=false,multiblocked=true": {
+      "model": "advanced_quantum_engineering:block/experimental_quantum_core"
+    },
+    "formed=false,powered=true,multiblocked=false": {
+      "model": "advanced_quantum_engineering:block/experimental_quantum_core"
+    },
+    "formed=false,powered=true,multiblocked=true": {
+      "model": "advanced_quantum_engineering:block/experimental_quantum_core"
+    },
+    "formed=true,powered=false,multiblocked=false": {
+      "model": "advanced_quantum_engineering:block/experimental_quantum_core"
+    },
+    "formed=true,powered=false,multiblocked=true": {
+      "model": "advanced_quantum_engineering:block/experimental_quantum_core_formed_on"
+    },
+    "formed=true,powered=true,multiblocked=false": {
+      "model": "advanced_quantum_engineering:block/experimental_quantum_core_formed_on"
+    },
+    "formed=true,powered=true,multiblocked=true": {
+      "model": "advanced_quantum_engineering:block/experimental_quantum_core_formed_on"
+    }
+  }
+}
+
