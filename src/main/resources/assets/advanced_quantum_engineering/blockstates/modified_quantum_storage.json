@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "formed=false": {
+      "model": "advanced_quantum_engineering:block/modified_quantum_storage"
+    },
+    "formed=true": {
+      "model": "advanced_quantum_engineering:block/modified_quantum_storage_formed"
+    }
+  }
+}
