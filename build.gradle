@@ -1,5 +1,5 @@
 plugins {
-    id 'net.minecraftforge.gradle' version '6.0.+'
+    id 'net.minecraftforge.gradle' version '6.0.54'
 }
 
 group = mod_group
@@ -45,6 +45,20 @@ def minecraftInstance = file('../../')
 
 repositories {
     mavenCentral()
+    maven {
+        name = 'ModMaven'
+        url = 'https://modmaven.dev/'
+        content {
+            includeGroup 'appeng'
+        }
+    }
+    maven {
+        name = 'CurseMaven'
+        url = 'https://www.cursemaven.com'
+        content {
+            includeGroup 'curse.maven'
+        }
+    }
     flatDir {
         dirs "${minecraftInstance}/mods"
     }
@@ -53,10 +67,35 @@ repositories {
 dependencies {
     minecraft 'net.minecraftforge:forge:1.20.1-47.4.18'
 
-    implementation fg.deobf(group: 'local.mods', name: 'appliedenergistics2-forge', version: '15.4.10')
-    implementation fg.deobf(group: 'local.mods', name: 'AdvancedAE', version: '1.3.5-1.20.1')
-    implementation fg.deobf(group: 'local.mods', name: 'ae2omnicells-1.20.1-forge', version: '1.1.6')
-    implementation fg.deobf(group: 'local.mods', name: 'AE2AddonLib', version: '1.0.4-1.20.1')
+    def localModsDir = file(findProperty('aqeLocalModsDir') ?: "${minecraftInstance}/mods")
+    def localAe2 = new File(localModsDir, 'appliedenergistics2-forge-15.4.10.jar')
+    def localAdvancedAe = new File(localModsDir, 'AdvancedAE-1.3.5-1.20.1.jar')
+    def localOmniCells = new File(localModsDir, 'ae2omnicells-1.20.1-forge-1.1.6.jar')
+    def localAddonLib = new File(localModsDir, 'AE2AddonLib-1.0.4-1.20.1.jar')
+
+    if (localAe2.isFile() && localAdvancedAe.isFile()
+            && localOmniCells.isFile() && localAddonLib.isFile()) {
+        implementation fg.deobf(group: 'local.mods', name: 'appliedenergistics2-forge', version: '15.4.10')
+        implementation fg.deobf(group: 'local.mods', name: 'AdvancedAE', version: '1.3.5-1.20.1')
+        implementation fg.deobf(group: 'local.mods', name: 'ae2omnicells-1.20.1-forge', version: '1.1.6')
+        implementation fg.deobf(group: 'local.mods', name: 'AE2AddonLib', version: '1.0.4-1.20.1')
+    } else {
+        implementation fg.deobf('appeng:appliedenergistics2-forge:15.4.10')
+
+        def advancedAeDependency = project.dependencies.create('curse.maven:advancedae-1084104:7939754') {
+            transitive = false
+        }
+        def omniCellsDependency = project.dependencies.create('curse.maven:omni-cells-1359517:8050975') {
+            transitive = false
+        }
+        def addonLibDependency = project.dependencies.create('curse.maven:ae2addonlib-1366135:7668681') {
+            transitive = false
+        }
+
+        implementation fg.deobf(advancedAeDependency)
+        implementation fg.deobf(omniCellsDependency)
+        implementation fg.deobf(addonLibDependency)
+    }
 
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 
