@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "C": { "item": "advanced_ae:quantum_core" },
+    "O": { "item": "ae2omnicells:quantum_omni_cell_component_64m" },
+    "Q": { "item": "advanced_ae:quantum_storage_component" }
+  },
+  "pattern": ["OQO", "QCQ", "OQO"],
+  "result": { "item": "advanced_quantum_engineering:modified_quantum_core" },
+  "show_notification": true
+}

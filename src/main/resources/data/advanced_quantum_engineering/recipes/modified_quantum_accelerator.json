@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "A": { "item": "advanced_ae:quantum_accelerator" },
+    "O": { "item": "ae2omnicells:quantum_omni_cell_component_64m" },
+    "P": { "item": "advanced_ae:quantum_processor" },
+    "Q": { "item": "advanced_ae:quantum_storage_component" }
+  },
+  "pattern": ["OPO", "QAQ", "OPO"],
+  "result": { "item": "advanced_quantum_engineering:modified_quantum_accelerator" },
+  "show_notification": true
+}

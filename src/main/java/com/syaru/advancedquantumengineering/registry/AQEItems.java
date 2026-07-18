@@ -2,6 +2,7 @@ package com.syaru.advancedquantumengineering.registry;
 
 import com.syaru.advancedquantumengineering.AdvancedQuantumEngineering;
 import com.syaru.advancedquantumengineering.item.AQEUnitBlockItem;
+import com.syaru.advancedquantumengineering.item.BigIntegerQuantumCoreItem;
 import com.syaru.advancedquantumengineering.item.ExperimentalQuantumCoreItem;
 import com.syaru.advancedquantumengineering.item.ModifiedQuantumCoreItem;
 import net.minecraft.world.item.Item;
@@ -26,6 +27,8 @@ public final class AQEItems {
             ITEMS.register("modified_data_entangler", () -> new AQEUnitBlockItem(AQEBlocks.MODIFIED_DATA_ENTANGLER.get()));
     public static final RegistryObject<Item> EXPERIMENTAL_QUANTUM_CORE =
             ITEMS.register("experimental_quantum_core", () -> new ExperimentalQuantumCoreItem(AQEBlocks.EXPERIMENTAL_QUANTUM_CORE.get()));
+    public static final RegistryObject<Item> BIG_INTEGER_QUANTUM_CORE =
+            ITEMS.register("big_integer_quantum_core", () -> new BigIntegerQuantumCoreItem(AQEBlocks.BIG_INTEGER_QUANTUM_CORE.get()));
 
     private AQEItems() {
     }

@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "A": { "item": "advanced_quantum_engineering:modified_quantum_accelerator" },
+    "M": { "item": "advanced_ae:quantum_multi_threader" },
+    "O": { "item": "ae2omnicells:quantum_omni_cell_component_64m" },
+    "P": { "item": "advanced_ae:quantum_processor" }
+  },
+  "pattern": ["OAO", "PMP", "OAO"],
+  "result": { "item": "advanced_quantum_engineering:modified_quantum_multi_threader" },
+  "show_notification": true
+}

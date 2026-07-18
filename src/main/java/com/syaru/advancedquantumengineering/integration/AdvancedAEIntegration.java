@@ -1,12 +1,14 @@
 package com.syaru.advancedquantumengineering.integration;
 
 import com.syaru.advancedquantumengineering.block.ExperimentalQuantumCoreBlock;
+import com.syaru.advancedquantumengineering.block.BigIntegerQuantumCoreBlock;
 import com.syaru.advancedquantumengineering.block.ModifiedQuantumCoreBlock;
 import com.syaru.advancedquantumengineering.block.ModifiedQuantumAcceleratorBlock;
 import com.syaru.advancedquantumengineering.block.ModifiedQuantumMultiThreaderBlock;
 import com.syaru.advancedquantumengineering.block.ModifiedQuantumStorageBlock;
 import com.syaru.advancedquantumengineering.block.ModifiedDataEntanglerBlock;
 import com.syaru.advancedquantumengineering.blockentity.ExperimentalQuantumCoreBlockEntity;
+import com.syaru.advancedquantumengineering.blockentity.BigIntegerQuantumCoreBlockEntity;
 import com.syaru.advancedquantumengineering.blockentity.ModifiedQuantumCoreBlockEntity;
 import com.syaru.advancedquantumengineering.blockentity.ModifiedQuantumAcceleratorBlockEntity;
 import com.syaru.advancedquantumengineering.blockentity.ModifiedQuantumMultiThreaderBlockEntity;
@@ -62,6 +64,13 @@ public final class AdvancedAEIntegration {
         experimentalCore.setBlockEntity(
                 ExperimentalQuantumCoreBlockEntity.class,
                 AQEBlockEntities.EXPERIMENTAL_QUANTUM_CORE.get(),
+                null,
+                null
+        );
+        BigIntegerQuantumCoreBlock bigIntegerCore = AQEBlocks.BIG_INTEGER_QUANTUM_CORE.get();
+        bigIntegerCore.setBlockEntity(
+                BigIntegerQuantumCoreBlockEntity.class,
+                AQEBlockEntities.BIG_INTEGER_QUANTUM_CORE.get(),
                 null,
                 null
         );

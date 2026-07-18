@@ -4,6 +4,7 @@ import com.mojang.logging.LogUtils;
 import com.syaru.advancedquantumengineering.config.AQEConfig;
 import com.syaru.advancedquantumengineering.integration.AdvancedAEIntegration;
 import com.syaru.advancedquantumengineering.integration.AQEDiagnostics;
+import com.syaru.advancedquantumengineering.integration.BigCraftingIntegration;
 import com.syaru.advancedquantumengineering.integration.OmniCellsIntegration;
 import com.syaru.advancedquantumengineering.registry.AQEBlockEntities;
 import com.syaru.advancedquantumengineering.registry.AQEBlocks;
@@ -39,6 +40,7 @@ public final class AdvancedQuantumEngineering {
 
     private void commonSetup(FMLCommonSetupEvent event) {
         event.enqueueWork(() -> {
+            BigCraftingIntegration.initialize();
             AdvancedAEIntegration.bindBlockEntity();
             AQEDiagnostics.runStartupChecks();
         });
@@ -52,6 +54,11 @@ public final class AdvancedQuantumEngineering {
         LOGGER.info("Modified Quantum Accelerator threads: {}", AQEConfig.getAcceleratorThreads());
         LOGGER.info("Modified Quantum Multi-Threader multiplier: {}", AQEConfig.getMultiThreaderMultiplier());
         LOGGER.info("Modified Data Entangler multiplier: {}", AQEConfig.getDataEntanglerMultiplier());
+        LOGGER.info("BigInteger Quantum Core capacity: 10^{} - 1 bytes ({} bits)",
+                AQEConfig.getBigIntegerCoreStorageDecimalDigits(),
+                AQEConfig.getBigIntegerCoreStorage().bitLength());
+        LOGGER.info("BigInteger Quantum Core co-processors: {}", AQEConfig.getBigIntegerCoreCoprocessors());
+        LOGGER.info("Optional BigInteger backend: {}", BigCraftingIntegration.backendId());
         LOGGER.info("Experimental Quantum Core storage: {}", AQEConfig.getExperimentalCoreStorage());
         LOGGER.info("Experimental Quantum Core co-processors: {}", AQEConfig.getExperimentalCoreCoprocessors());
         LOGGER.info("Using Omni Cells component: {}", OmniCellsIntegration.QUANTUM_OMNI_CELL_COMPONENT_64M);

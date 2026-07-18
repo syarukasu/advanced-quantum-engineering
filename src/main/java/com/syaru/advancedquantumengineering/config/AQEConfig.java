@@ -1,5 +1,6 @@
 package com.syaru.advancedquantumengineering.config;
 
+import java.math.BigInteger;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.config.ModConfig;
@@ -23,6 +24,12 @@ public final class AQEConfig {
     public static final int DEFAULT_DATA_ENTANGLER_MULTIPLIER = 8;
     public static final long DEFAULT_EXPERIMENTAL_CORE_STORAGE = MAX_SAFE_EFFECTIVE_STORAGE_BYTES;
     public static final int DEFAULT_EXPERIMENTAL_CORE_COPROCESSORS = MAX_SAFE_EFFECTIVE_COPROCESSORS;
+    public static final int MAX_BIG_INTEGER_BITS = 1_048_576;
+    public static final int MIN_BIG_INTEGER_DECIMAL_DIGITS = 20;
+    // Leaves headroom for Advanced AE's summed Data Entangler multiplier.
+    public static final int MAX_BIG_INTEGER_DECIMAL_DIGITS = 315_640;
+    public static final int DEFAULT_BIG_INTEGER_DECIMAL_DIGITS = 64;
+    public static final int DEFAULT_BIG_INTEGER_CORE_COPROCESSORS = MAX_SAFE_EFFECTIVE_COPROCESSORS;
 
     private static final ForgeConfigSpec SPEC;
     private static final ForgeConfigSpec.LongValue CORE_STORAGE;
@@ -33,9 +40,13 @@ public final class AQEConfig {
     private static final ForgeConfigSpec.IntValue DATA_ENTANGLER_MULTIPLIER;
     private static final ForgeConfigSpec.LongValue EXPERIMENTAL_CORE_STORAGE;
     private static final ForgeConfigSpec.IntValue EXPERIMENTAL_CORE_COPROCESSORS;
+    private static final ForgeConfigSpec.IntValue BIG_INTEGER_CORE_DECIMAL_DIGITS;
+    private static final ForgeConfigSpec.IntValue BIG_INTEGER_CORE_COPROCESSORS;
     private static final ForgeConfigSpec.BooleanValue FAIL_FAST_ON_INTEGRATION_MISMATCH;
     private static final ForgeConfigSpec.BooleanValue WARN_ON_EXTREME_CONFIG_VALUES;
     private static final ForgeConfigSpec.IntValue DIAGNOSTIC_MODIFIED_ACCELERATOR_COUNT;
+    private static volatile int cachedBigIntegerDigits = -1;
+    private static volatile BigInteger cachedBigIntegerStorage = BigInteger.ZERO;
 
     static {
         ForgeConfigSpec.Builder builder = new ForgeConfigSpec.Builder();
@@ -54,6 +65,32 @@ public final class AQEConfig {
                         "Range: " + MIN_COPROCESSORS + " - " + MAX_BASE_COPROCESSORS + ".",
                         "Higher values increase crafting calculation load; the default assumes one primary Astral-scale modified Quantum Computer per server.")
                 .defineInRange("baseCoprocessors", DEFAULT_BASE_COPROCESSORS, MIN_COPROCESSORS, MAX_BASE_COPROCESSORS);
+        builder.pop();
+
+        builder.push("bigIntegerQuantumCore");
+        BIG_INTEGER_CORE_DECIMAL_DIGITS = builder
+                .comment(
+                        "Number of decimal digits in the BigInteger Quantum Core capacity.",
+                        "The exact capacity is 10^digits - 1 bytes; no decimal-string value is required.",
+                        "Default: " + DEFAULT_BIG_INTEGER_DECIMAL_DIGITS + " digits.",
+                        "Range: " + MIN_BIG_INTEGER_DECIMAL_DIGITS + " - " + MAX_BIG_INTEGER_DECIMAL_DIGITS + " digits.",
+                        "ACO applies its own binary-bit safety limit when its optional backend is active.")
+                .defineInRange(
+                        "storageDecimalDigits",
+                        DEFAULT_BIG_INTEGER_DECIMAL_DIGITS,
+                        MIN_BIG_INTEGER_DECIMAL_DIGITS,
+                        MAX_BIG_INTEGER_DECIMAL_DIGITS);
+        BIG_INTEGER_CORE_COPROCESSORS = builder
+                .comment(
+                        "Co-processors supplied by the BigInteger Quantum Core.",
+                        "This remains an int because AE2 and Advanced AE expose co-processors as int.",
+                        "Default: " + DEFAULT_BIG_INTEGER_CORE_COPROCESSORS + ".",
+                        "Range: " + MIN_COPROCESSORS + " - " + MAX_SAFE_EFFECTIVE_COPROCESSORS + ".")
+                .defineInRange(
+                        "coprocessors",
+                        DEFAULT_BIG_INTEGER_CORE_COPROCESSORS,
+                        MIN_COPROCESSORS,
+                        MAX_SAFE_EFFECTIVE_COPROCESSORS);
         builder.pop();
 
         builder.push("modifiedQuantumStorage");
@@ -166,8 +203,39 @@ public final class AQEConfig {
         return Math.min(MAX_SAFE_EFFECTIVE_COPROCESSORS, Math.max(MIN_COPROCESSORS, EXPERIMENTAL_CORE_COPROCESSORS.get()));
     }
 
+    public static int getBigIntegerCoreStorageDecimalDigits() {
+        return Math.min(
+                MAX_BIG_INTEGER_DECIMAL_DIGITS,
+                Math.max(MIN_BIG_INTEGER_DECIMAL_DIGITS, BIG_INTEGER_CORE_DECIMAL_DIGITS.get()));
+    }
+
+    public static BigInteger getBigIntegerCoreStorage() {
+        int digits = getBigIntegerCoreStorageDecimalDigits();
+        BigInteger cached = cachedBigIntegerStorage;
+        if (cachedBigIntegerDigits == digits && cached.signum() > 0) {
+            return cached;
+        }
+        synchronized (AQEConfig.class) {
+            if (cachedBigIntegerDigits != digits || cachedBigIntegerStorage.signum() <= 0) {
+                cachedBigIntegerStorage = BigInteger.TEN.pow(digits).subtract(BigInteger.ONE);
+                cachedBigIntegerDigits = digits;
+            }
+            return cachedBigIntegerStorage;
+        }
+    }
+
+    public static int getBigIntegerCoreCoprocessors() {
+        return Math.min(
+                MAX_SAFE_EFFECTIVE_COPROCESSORS,
+                Math.max(MIN_COPROCESSORS, BIG_INTEGER_CORE_COPROCESSORS.get()));
+    }
+
     public static int getMaxSingleUnitCoprocessors() {
-        return Math.max(getExperimentalCoreCoprocessors(), Math.max(getBaseCoprocessors(), getAcceleratorThreads()));
+        return Math.max(
+                getBigIntegerCoreCoprocessors(),
+                Math.max(
+                        getExperimentalCoreCoprocessors(),
+                        Math.max(getBaseCoprocessors(), getAcceleratorThreads())));
     }
 
     public static boolean failFastOnIntegrationMismatch() {
