@@ -1,0 +1,9 @@
+{
+  "replace": false,
+  "values": [
+    "advanced_ae:quantum_core",
+    "advanced_quantum_engineering:modified_quantum_core",
+    "advanced_quantum_engineering:experimental_quantum_core",
+    "advanced_quantum_engineering:big_integer_quantum_core"
+  ]
+}

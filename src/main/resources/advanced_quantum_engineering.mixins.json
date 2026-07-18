@@ -4,8 +4,18 @@
   "package": "com.syaru.advancedquantumengineering.mixin",
   "compatibilityLevel": "JAVA_17",
   "mixins": [
+    "AdvCraftingCPUAccessor",
+    "AdvCraftingCPUNameMixin",
     "AdvCraftingCPUClusterMixin",
+    "CraftingCPURecordAccessor",
+    "CraftConfirmMenuMixin",
     "TooltipsMixin"
+  ],
+  "client": [
+    "AEBaseScreenAccessor",
+    "AdvCpuSelectionListMixin",
+    "CPUSelectionListMixin",
+    "CraftConfirmScreenMixin"
   ],
   "injectors": {
     "defaultRequire": 1

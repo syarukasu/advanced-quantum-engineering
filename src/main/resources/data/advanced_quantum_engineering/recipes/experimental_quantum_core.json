@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "A": { "item": "advanced_quantum_engineering:modified_quantum_accelerator" },
+    "C": { "item": "advanced_quantum_engineering:modified_quantum_core" },
+    "E": { "item": "advanced_quantum_engineering:modified_data_entangler" },
+    "O": { "item": "ae2omnicells:quantum_omni_cell_component_64m" },
+    "S": { "item": "advanced_quantum_engineering:modified_quantum_storage" }
+  },
+  "pattern": ["SAS", "OCO", "SES"],
+  "result": { "item": "advanced_quantum_engineering:experimental_quantum_core" },
+  "show_notification": true
+}

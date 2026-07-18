@@ -42,6 +42,7 @@ public final class AQEDiagnostics {
         AdvancedQuantumEngineering.LOGGER.info("Detected AE2 version: {}", getVersion("ae2"));
         AdvancedQuantumEngineering.LOGGER.info("Detected Advanced AE version: {}", getVersion(AdvancedAEIntegration.MODID));
         AdvancedQuantumEngineering.LOGGER.info("Detected AE2 Omni Cells version: {}", getVersion(OmniCellsIntegration.MODID));
+        AdvancedQuantumEngineering.LOGGER.info("Detected optional ACO version: {}", getVersion(BigCraftingIntegration.ACO_MODID));
     }
 
     private static String getVersion(String modId) {
@@ -104,6 +105,7 @@ public final class AQEDiagnostics {
         ok &= checkUnitType("modified_quantum_multi_threader", AQEBlocks.MODIFIED_QUANTUM_MULTI_THREADER.get(), AAECraftingUnitType.MULTI_THREADER);
         ok &= checkUnitType("modified_data_entangler", AQEBlocks.MODIFIED_DATA_ENTANGLER.get(), AAECraftingUnitType.STORAGE_MULTIPLIER);
         ok &= checkUnitType("experimental_quantum_core", AQEBlocks.EXPERIMENTAL_QUANTUM_CORE.get(), AAECraftingUnitType.QUANTUM_CORE);
+        ok &= checkUnitType("big_integer_quantum_core", AQEBlocks.BIG_INTEGER_QUANTUM_CORE.get(), AAECraftingUnitType.QUANTUM_CORE);
         return ok;
     }
 
@@ -151,6 +153,13 @@ public final class AQEDiagnostics {
                 "AQE experimental Quantum Core: {} bytes, {} co-processors before Advanced AE multipliers",
                 AQEConfig.getExperimentalCoreStorage(),
                 AQEConfig.getExperimentalCoreCoprocessors()
+        );
+        AdvancedQuantumEngineering.LOGGER.info(
+                "AQE BigInteger Quantum Core: 10^{} - 1 bytes ({} bits), {} co-processors, backend {}",
+                AQEConfig.getBigIntegerCoreStorageDecimalDigits(),
+                AQEConfig.getBigIntegerCoreStorage().bitLength(),
+                AQEConfig.getBigIntegerCoreCoprocessors(),
+                BigCraftingIntegration.backendId()
         );
         AdvancedQuantumEngineering.LOGGER.info(
                 "AQE effective co-processor values are clamped to {} to avoid AE2 int overflow",

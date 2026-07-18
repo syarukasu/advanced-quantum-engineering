@@ -54,7 +54,7 @@ Advanced AE's common config defaults `quantumComputerAcceleratorThreads` to 8 wi
 
 ### Persistence
 
-Advanced AE stores active CPU state in `AdvCraftingCPUCluster.writeToNBT` and restores it from the core block entity's previous state in `AdvCraftingCPUCluster.done`. This mod does not add duplicate NBT for cluster state.
+Advanced AE stores normal active CPU state in `AdvCraftingCPUCluster.writeToNBT` and restores it from the core block entity's previous state in `AdvCraftingCPUCluster.done`. AQE leaves that state authoritative. AQE 2.0.0 adds only a versioned `aqeBigCraftingHost` sidecar for optional ACO-native BigInteger jobs; standard job contents are not copied into a second execution engine.
 
 ### Model Resources
 
@@ -99,8 +99,18 @@ The modified accelerator defaults to 512 co-processors per block. In the intende
   - Block: subclass `AAEAbstractCraftingUnitBlock`
   - Block entity: subclass `AdvCraftingBlockEntity`
 - Access Transformer: not required.
-- Mixin: required only for the per-unit thread validation constant in `AdvCraftingCPUCluster.addBlockEntity`.
-- Minimum changed points: register new blocks using the existing Advanced AE unit types, override storage/thread/multiplier methods in subclassed block entities, and raise the single-unit thread validation constant so configured values can form a cluster.
+- Mixin: required for the per-unit thread guard, checked cluster-capacity aggregation, exact multi-job reservation accounting, and versioned sidecar persistence in `AdvCraftingCPUCluster`.
+- Minimum changed points: register new blocks using existing Advanced AE unit types, override storage/thread/multiplier methods in subclassed block entities, raise the single-unit thread guard, and replace only the overflowing aggregate arithmetic while leaving Advanced AE job execution authoritative.
+
+## BigInteger and Optional ACO Research
+
+AE2 15.4.10 exposes crafting request amounts, plan bytes, executing task counts, and `ICraftingCPU.getAvailableStorage()` as signed `long`. Advanced AE 1.3.5 also stores each `AdvCraftingCPU.bytes` value as an NBT long. Reinterpreting those fields as BigInteger would corrupt normal AE2 interoperability.
+
+Advanced AE does, however, support multiple `AdvCraftingCPU` jobs inside one Quantum Computer cluster. AQE therefore keeps the structure's total capacity and the sum of all active job reservations as BigInteger while preserving every individual standard job in Advanced AE's original long representation. This makes capacity above `Long.MAX_VALUE` real for aggregate multi-job accounting without replacing normal AE2 jobs.
+
+ACO 1.3.0 provides an explicit host API for native BigInteger jobs. AQE discovers API v3 only when Forge reports `ae2_crafting_optimizer` 1.3.0 as loaded. The adapter uses reflection and has no ACO type in AQE's production classpath. If ACO is absent, AQE uses a local exact-capacity ledger. If ACO state is present but the backend is unavailable, its opaque NBT and reservation are preserved instead of discarded.
+
+The selected NBT representation is a canonical non-negative two's-complement byte array with a schema version and a 1,048,576-bit hard limit. This avoids decimal parsing ambiguity and prevents unbounded allocation from malformed save data.
 
 ## Compatibility Risk
 

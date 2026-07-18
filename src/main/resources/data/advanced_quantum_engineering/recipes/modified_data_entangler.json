@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "D": { "item": "advanced_ae:data_entangler" },
+    "O": { "item": "ae2omnicells:quantum_omni_cell_component_64m" },
+    "P": { "item": "advanced_ae:quantum_processor" },
+    "Q": { "item": "advanced_ae:quantum_storage_component" }
+  },
+  "pattern": ["OQO", "PDP", "OQO"],
+  "result": { "item": "advanced_quantum_engineering:modified_data_entangler" },
+  "show_notification": true
+}

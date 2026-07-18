@@ -2,6 +2,7 @@ package com.syaru.advancedquantumengineering.registry;
 
 import com.syaru.advancedquantumengineering.AdvancedQuantumEngineering;
 import com.syaru.advancedquantumengineering.block.ExperimentalQuantumCoreBlock;
+import com.syaru.advancedquantumengineering.block.BigIntegerQuantumCoreBlock;
 import com.syaru.advancedquantumengineering.block.ModifiedDataEntanglerBlock;
 import com.syaru.advancedquantumengineering.block.ModifiedQuantumAcceleratorBlock;
 import com.syaru.advancedquantumengineering.block.ModifiedQuantumCoreBlock;
@@ -29,6 +30,8 @@ public final class AQEBlocks {
             BLOCKS.register("modified_data_entangler", ModifiedDataEntanglerBlock::new);
     public static final RegistryObject<ExperimentalQuantumCoreBlock> EXPERIMENTAL_QUANTUM_CORE =
             BLOCKS.register("experimental_quantum_core", ExperimentalQuantumCoreBlock::new);
+    public static final RegistryObject<BigIntegerQuantumCoreBlock> BIG_INTEGER_QUANTUM_CORE =
+            BLOCKS.register("big_integer_quantum_core", BigIntegerQuantumCoreBlock::new);
 
     private AQEBlocks() {
     }

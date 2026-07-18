@@ -1,0 +1,12 @@
+{
+  "replace": false,
+  "values": [
+    "advanced_quantum_engineering:modified_quantum_core",
+    "advanced_quantum_engineering:modified_quantum_storage",
+    "advanced_quantum_engineering:modified_quantum_accelerator",
+    "advanced_quantum_engineering:modified_quantum_multi_threader",
+    "advanced_quantum_engineering:modified_data_entangler",
+    "advanced_quantum_engineering:experimental_quantum_core",
+    "advanced_quantum_engineering:big_integer_quantum_core"
+  ]
+}

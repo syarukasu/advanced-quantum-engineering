@@ -11,7 +11,7 @@ gradlew.bat clean build
 Expected:
 
 - Build succeeds.
-- Jar exists under `build/libs/advanced-quantum-engineering-1.0.0.jar`.
+- Jar exists under `build/libs/advanced-quantum-engineering-2.0.0.jar`.
 
 ## Registration
 
@@ -24,6 +24,7 @@ Commands:
 /give @s advanced_quantum_engineering:modified_quantum_multi_threader
 /give @s advanced_quantum_engineering:modified_data_entangler
 /give @s advanced_quantum_engineering:experimental_quantum_core
+/give @s advanced_quantum_engineering:big_integer_quantum_core
 ```
 
 Expected:
@@ -52,6 +53,8 @@ Invalid core choices:
 - `advanced_quantum_engineering:modified_quantum_core` x2
 - `advanced_ae:quantum_core` x1 plus `advanced_quantum_engineering:modified_quantum_core` x1
 - `advanced_quantum_engineering:modified_quantum_core` x1 plus `advanced_quantum_engineering:experimental_quantum_core` x1
+- `advanced_quantum_engineering:big_integer_quantum_core` x2
+- `advanced_quantum_engineering:big_integer_quantum_core` x1 plus any other core x1
 - no core
 
 Expected:
@@ -70,7 +73,7 @@ Expected:
 - Modified Data Entangler multiplies storage by 8 by default.
 - One modified core, one modified storage block, and one modified Data Entangler provide about 256 TiB.
 - Experimental core alone provides 9,223,372,036,854,775,806 bytes by default.
-- Experimental core with a modified Data Entangler still reports a non-negative bounded capacity because AQE clamps final effective storage to `Long.MAX_VALUE - 1`.
+- BigInteger core with a modified Data Entangler retains the exact multiplied capacity internally and exposes a non-negative saturated long value to Advanced AE.
 - Jobs above available storage are rejected as CPU too small.
 - Rejection does not crash.
 - Advanced AE's crafting CPU selection tooltip can be opened with TiB/PiB/EiB-scale AQE CPU values without an AE2 `Tooltips.getByteAmount` array bounds crash.
@@ -140,6 +143,37 @@ Expected for AQE:
 - Startup logs include detected AE2, Advanced AE, and AE2 Omni Cells versions.
 - Startup logs include AQE unit type checks for core, storage, accelerator, and Data Entangler roles.
 - Startup logs include estimated storage and co-processor values for the diagnostic structure.
+
+## BigInteger and Optional ACO Matrix
+
+Run every case on a copied world before enabling experimental ACO execution paths. Do not treat `gradlew test` alone as full runtime qualification.
+
+1. AQE 2.0.0 without ACO:
+   - client and dedicated server start;
+   - BigInteger core forms the original Advanced AE structure;
+   - multiple standard crafting jobs run concurrently;
+   - save/restart restores every job and exact remaining capacity;
+   - tooltip reports the local long-compatible backend.
+2. AQE 2.0.0 with ACO 1.3.0 on both sides:
+   - startup logs report `aco:big_crafting_v3`;
+   - normal jobs and ACO-native reservations share one capacity;
+   - save/restart restores the same runtime and job IDs;
+   - chunk unload/reload does not duplicate or release reservations;
+   - client status packets do not exceed their configured page/byte limits.
+3. Remove ACO after saving native state:
+   - AQE still starts;
+   - opaque state remains in `aqeBigCraftingHost`;
+   - paused reservation remains unavailable to standard jobs;
+   - no item or job is silently completed, cancelled, or deleted.
+4. Reinstall ACO 1.3.0:
+   - the preserved state restores;
+   - standard reservations are reconciled from Advanced AE;
+   - no reservation is counted twice.
+5. Install an unsupported ACO version:
+   - default diagnostics fail with an explicit compatibility message;
+   - no saved payload is overwritten.
+
+Automated tests cover checked capacity arithmetic, malformed/canonical NBT, local fallback preservation, optional API reflection, shared host reservations, and host save/load. They do not replace Forge/Arclight startup, transformed-Mixin, in-world structure, multiplayer, or crash-recovery tests.
 
 ## GameTest
 

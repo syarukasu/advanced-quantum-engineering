@@ -24,6 +24,7 @@ public final class AQECreativeTabs {
                         output.accept(AQEItems.MODIFIED_QUANTUM_ACCELERATOR.get());
                         output.accept(AQEItems.MODIFIED_QUANTUM_MULTI_THREADER.get());
                         output.accept(AQEItems.EXPERIMENTAL_QUANTUM_CORE.get());
+                        output.accept(AQEItems.BIG_INTEGER_QUANTUM_CORE.get());
                     })
                     .build());
 

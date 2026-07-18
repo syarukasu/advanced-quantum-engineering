@@ -47,6 +47,12 @@ The Advanced AE JAR is not modified. One targeted Mixin is used for the per-unit
   - Unit type: `AAECraftingUnitType.QUANTUM_CORE`
   - `getStorageBytes()` default: 9,223,372,036,854,775,806 bytes, `Long.MAX_VALUE - 1`
   - `getAcceleratorThreads()` default: 2,147,483,646
+- `advanced_quantum_engineering:big_integer_quantum_core`
+  - Unit type: `AAECraftingUnitType.QUANTUM_CORE`
+  - Exact capacity provider: `10^storageDecimalDigits - 1`, default 64 digits
+  - Advanced AE facade: bounded signed `long`
+  - `getAcceleratorThreads()` default: 2,147,483,646
+  - Survival recipe: none
 
 The original Advanced AE parts are not changed.
 
@@ -54,7 +60,7 @@ The original Advanced AE parts are not changed.
 
 Advanced AE's `AdvCraftingCPUCluster.addBlockEntity` calls `getStorageBytes()` on each `AdvCraftingBlockEntity`. Java virtual dispatch makes AQE block entities return their configured values, and Advanced AE adds those values to the normal cluster storage.
 
-`AdvCraftingCPUCluster.recalculateRemainingStorage` then multiplies the summed storage by the summed storage multiplier. With one modified core, one modified storage block, and one modified Data Entangler, the default target is about 256 TiB.
+AQE intercepts `AdvCraftingCPUCluster.recalculateRemainingStorage` and repeats Advanced AE's existing sum-then-multiply rule with checked BigInteger arithmetic. With one modified core, one modified storage block, and one modified Data Entangler, the normal default target remains about 256 TiB. A BigInteger core uses the same rule without overflowing the structure total.
 
 ## Co-Processor Path
 
@@ -88,13 +94,26 @@ The recipes use `ae2omnicells:quantum_omni_cell_component_64m`. The installed Om
 
 The Mixin changes only the `16` constant used by Advanced AE's single-unit thread guard inside `AdvCraftingCPUCluster.addBlockEntity`. It returns `max(16, AQEConfig.getMaxSingleUnitCoprocessors())`, which allows the modified core and modified accelerators to contribute their configured values while preserving the rest of the cluster calculation.
 
-The same Mixin injects at the head of `AdvCraftingCPUCluster.recalculateRemainingStorage()`. It recomputes storage and storage multipliers from the block list using saturating arithmetic, then clamps final effective storage to `Long.MAX_VALUE - 1`. This prevents Advanced AE's storage addition or Data Entangler multiplication from overflowing when the experimental core is used.
+The same Mixin injects at the head of `AdvCraftingCPUCluster.recalculateRemainingStorage()`. It recomputes storage and storage multipliers from the block list using checked BigInteger arithmetic. It reconciles every normal `AdvCraftingCPU` reservation into one host ledger and only saturates the facade returned to Advanced AE. Exact physical, reserved, and available values remain BigInteger.
 
 It also injects at the head of `AdvCraftingCPUCluster.getCoProcessors()` and returns a long-calculated, clamped value. This prevents Advanced AE's `accelerator * acceleratorMultiplier` int multiplication from overflowing when the experimental core is combined with a Multi-Threader. The clamp is `Integer.MAX_VALUE - 1`, which lets AE2 add one execution slot without overflowing.
 
 `TooltipsMixin` injects at the head of AE2's `Tooltips.getByteAmount(long)` only for values at or above one TiB. AE2 15.4.10's byte divisor table stops before TiB-scale values, while Advanced AE's CPU selection tooltip calls `Tooltips.ofBytes` for CPU storage. The mixin returns a normal `Tooltips.Amount` using T/P/E units, so very large AQE CPU values render without changing actual storage or crafting behavior.
 
 AE2 crafting/network optimizations are not implemented in AQE. They are kept in the separate `ae2-crafting-optimizer` project to keep Quantum Computer behavior and AE2 optimization behavior independently testable.
+
+## Optional ACO Backend
+
+AQE does not require ACO in Gradle or `mods.toml`. The `ae2_crafting_optimizer` dependency entry is optional and ordered after ACO only when present.
+
+`BigCraftingIntegration` selects one of two implementations:
+
+- `LocalBigCraftingHost`: exact aggregate capacity and standard Advanced AE job reservations; opaque ACO state remains paused and reserved.
+- `AcoBigCraftingBackend`: a reflection-only adapter for ACO 1.3.0 API v3. It creates or loads an ACO `BigCraftingHostRuntime`, registers it by the owning Quantum Computer cluster, and shares capacity between standard and native BigInteger reservations.
+
+Capacity reconciliation and NBT snapshot creation lock the same ACO runtime monitor, so a scheduler cannot observe a half-updated capacity or save a payload with a mismatched reservation summary. Removing ACO does not delete its payload. Reinstalling the compatible backend restores it and then replaces persisted standard reservations with Advanced AE's authoritative active-job map.
+
+Standard AE2 plans remain signed-long objects. AQE 2.0.0 does not patch a normal terminal packet or `CraftingPlan` into a fake wider type. A single larger-than-long native job must enter through ACO's explicit BigInteger API; multiple normal Advanced AE jobs already consume the exact BigInteger total.
 
 ## Known Risk
 

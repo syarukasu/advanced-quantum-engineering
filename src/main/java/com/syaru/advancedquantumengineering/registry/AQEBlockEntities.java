@@ -2,6 +2,7 @@ package com.syaru.advancedquantumengineering.registry;
 
 import com.syaru.advancedquantumengineering.AdvancedQuantumEngineering;
 import com.syaru.advancedquantumengineering.blockentity.ExperimentalQuantumCoreBlockEntity;
+import com.syaru.advancedquantumengineering.blockentity.BigIntegerQuantumCoreBlockEntity;
 import com.syaru.advancedquantumengineering.blockentity.ModifiedDataEntanglerBlockEntity;
 import com.syaru.advancedquantumengineering.blockentity.ModifiedQuantumAcceleratorBlockEntity;
 import com.syaru.advancedquantumengineering.blockentity.ModifiedQuantumCoreBlockEntity;
@@ -52,6 +53,12 @@ public final class AQEBlockEntities {
                     () -> BlockEntityType.Builder.of(
                             ExperimentalQuantumCoreBlockEntity::new,
                             AQEBlocks.EXPERIMENTAL_QUANTUM_CORE.get()
+                    ).build(null));
+    public static final RegistryObject<BlockEntityType<BigIntegerQuantumCoreBlockEntity>> BIG_INTEGER_QUANTUM_CORE =
+            BLOCK_ENTITIES.register("big_integer_quantum_core",
+                    () -> BlockEntityType.Builder.of(
+                            BigIntegerQuantumCoreBlockEntity::new,
+                            AQEBlocks.BIG_INTEGER_QUANTUM_CORE.get()
                     ).build(null));
 
     private AQEBlockEntities() {
