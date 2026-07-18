@@ -11,7 +11,7 @@ authors = "syaru"
 displayURL = "https://github.com/syarukasu/advanced-quantum-engineering"
 description = '''
 Adds Astral-scale upgraded Advanced AE Quantum Computer parts while preserving
-Advanced AE's original multiblock rules. ACO 1.3.0 is an optional BigInteger backend.
+Advanced AE's original multiblock rules. ACO 1.3.x is an optional BigInteger backend.
 '''
 
 [[dependencies.advanced_quantum_engineering]]
