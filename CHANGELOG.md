@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.0.1 - 2026-07-18
+
+### Fixed
+
+- Accepted compatible optional ACO releases across the declared
+  `[1.3.0,1.4.0)` range instead of rejecting every version except `1.3.0`.
+- Kept ACO optional while retaining the API v3 field and reflected-method
+  validation as the authoritative compatibility boundary.
+- Updated documentation for ACO `1.3.1` interoperability.
+
 ## 2.0.0 - 2026-07-18
 
 The release artifact was clean-built and qualified through Forge client bootstrap

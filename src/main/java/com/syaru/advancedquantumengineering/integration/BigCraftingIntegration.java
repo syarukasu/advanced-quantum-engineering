@@ -11,7 +11,7 @@ import net.minecraftforge.fml.ModList;
 /** Optional ACO integration loader with no eager reference to ACO classes. */
 public final class BigCraftingIntegration {
     public static final String ACO_MODID = "ae2_crafting_optimizer";
-    public static final String SUPPORTED_ACO_VERSION = "1.3.0";
+    public static final String SUPPORTED_ACO_VERSION_RANGE = "[1.3.0,1.4.0)";
     private static final String ADAPTER_CLASS =
             "com.syaru.advancedquantumengineering.integration.AcoBigCraftingBackend";
 
@@ -36,11 +36,12 @@ public final class BigCraftingIntegration {
         String installed = ModList.get().getModContainerById(ACO_MODID)
                 .map(container -> container.getModInfo().getVersion().toString())
                 .orElse("unknown");
-        if (!SUPPORTED_ACO_VERSION.equals(installed)) {
-            failOrFallback("AQE 2.0.0 supports optional ACO " + SUPPORTED_ACO_VERSION
-                    + ", but found " + installed, null);
-            return;
-        }
+        // Forge enforces the optional dependency range from mods.toml when ACO is present.
+        // The adapter additionally verifies API_VERSION and every reflected method below.
+        AdvancedQuantumEngineering.LOGGER.info(
+                "Detected optional ACO {} in supported range {}; validating BigInteger API v3",
+                installed,
+                SUPPORTED_ACO_VERSION_RANGE);
 
         try {
             Class<?> adapterType = Class.forName(
@@ -65,11 +66,15 @@ public final class BigCraftingIntegration {
                     && invocation.getCause() != null
                             ? invocation.getCause()
                             : failure;
-            failOrFallback("Failed to initialize optional ACO BigInteger integration", cause);
+            failOrFallback(
+                    "Failed to initialize optional ACO BigInteger integration for " + installed,
+                    cause);
         } catch (RuntimeException failure) {
             backend = new LocalBackend();
             acoBackendSelected = false;
-            failOrFallback("Failed to initialize optional ACO BigInteger integration", failure);
+            failOrFallback(
+                    "Failed to initialize optional ACO BigInteger integration for " + installed,
+                    failure);
         }
     }
 
