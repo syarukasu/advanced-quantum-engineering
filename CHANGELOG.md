@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.0.2 - 2026-07-19
+
+### Changed
+
+- Moved AQE configuration from per-world `serverconfig` directories to
+  `config/advanced_quantum_engineering.toml`.
+- Consolidated the generated TOML into three readable sections:
+  `quantum_computer`, `endgame_cores`, and `safety_and_diagnostics`.
+- Added one-time migration of existing per-world AQE values. The legacy file is
+  retained with a `.migrated` suffix after a successful migration.
+- Kept all registry IDs and default gameplay values unchanged.
+
 ## 2.0.1 - 2026-07-18
 
 ### Fixed

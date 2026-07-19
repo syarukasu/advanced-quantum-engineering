@@ -66,9 +66,10 @@ public final class AdvancedQuantumEngineering {
     }
 
     private void onServerStarted(ServerStartedEvent event) {
-        LOGGER.info("AQE server config active - Modified Quantum Core storage: {}", AQEConfig.getCoreStorage());
-        LOGGER.info("AQE server config active - Modified Quantum Core base threads: {}", AQEConfig.getBaseCoprocessors());
-        LOGGER.info("AQE server config active - Experimental Quantum Core storage: {}", AQEConfig.getExperimentalCoreStorage());
-        LOGGER.info("AQE server config active - Experimental Quantum Core co-processors: {}", AQEConfig.getExperimentalCoreCoprocessors());
+        AQEConfig.migrateLegacyServerConfig(event.getServer());
+        LOGGER.info("AQE global config active - Modified Quantum Core storage: {}", AQEConfig.getCoreStorage());
+        LOGGER.info("AQE global config active - Modified Quantum Core base threads: {}", AQEConfig.getBaseCoprocessors());
+        LOGGER.info("AQE global config active - Experimental Quantum Core storage: {}", AQEConfig.getExperimentalCoreStorage());
+        LOGGER.info("AQE global config active - Experimental Quantum Core co-processors: {}", AQEConfig.getExperimentalCoreCoprocessors());
     }
 }

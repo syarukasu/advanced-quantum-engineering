@@ -106,45 +106,39 @@ The BigInteger Quantum Core intentionally has no recipe. It is an operator-contr
 
 ## Config
 
-Server config:
+Global config: `config/advanced_quantum_engineering.toml`
 
 ```toml
-[modifiedQuantumCore]
-coreStorage = 268435456
-baseCoprocessors = 4096
+[quantum_computer]
+core_storage_bytes = 268435456
+storage_block_bytes = 35184372088831
+core_coprocessors = 4096
+accelerator_threads = 512
+multi_threader_multiplier = 8
+data_entangler_multiplier = 8
 
-[experimentalQuantumCore]
-experimentalCoreStorage = 9223372036854775806
-experimentalCoreCoprocessors = 2147483646
+[endgame_cores]
+long_core_storage_bytes = 9223372036854775806
+long_core_coprocessors = 2147483646
+# Exact capacity is 10^digits - 1 bytes.
+big_integer_storage_digits = 64
+big_integer_coprocessors = 2147483646
 
-[bigIntegerQuantumCore]
-# Exact capacity is 10^storageDecimalDigits - 1 bytes.
-storageDecimalDigits = 64
-coprocessors = 2147483646
-
-[modifiedQuantumStorage]
-storageBlockBytes = 35184372088831
-
-[modifiedQuantumAccelerator]
-acceleratorThreads = 512
-
-[modifiedQuantumMultiThreader]
-multiThreaderMultiplier = 8
-
-[modifiedDataEntangler]
-dataEntanglerMultiplier = 8
-
-[diagnostics]
-failFastOnIntegrationMismatch = true
-warnOnExtremeConfigValues = true
-diagnosticModifiedAcceleratorCount = 121
+[safety_and_diagnostics]
+fail_fast_on_integration_mismatch = true
+warn_on_extreme_values = true
+diagnostic_accelerator_count = 121
 ```
+
+AQE 2.0.2 moves this file out of each world's `serverconfig` directory. On the
+first server start, an existing `advanced_quantum_engineering-server.toml` is
+migrated and renamed with a `.migrated` suffix.
 
 Advanced AE 1.3.5 normally rejects more than 16 accelerator threads from a single unit block. This mod applies one targeted Mixin to raise that validation constant to the larger configured AQE core/accelerator value. The same Mixin performs checked BigInteger storage aggregation, keeps a shared reservation ledger for every active Quantum Computer job, exposes a saturated `long` facade to Advanced AE, and clamps effective co-processors to `Integer.MAX_VALUE - 1`.
 
 AQE also patches AE2's byte tooltip formatter for TiB/PiB/EiB-scale crafting CPU values. This is display-only and prevents Advanced AE CPU selection tooltips from crashing when the experimental core reports values above AE2's default byte unit table.
 
-`diagnostics` does not change gameplay values. It verifies the expected Advanced AE API and AQE unit roles during common setup, logs detected dependency versions, and prints estimated storage/co-processor values. `failFastOnIntegrationMismatch = true` makes the mod stop loading if Advanced AE no longer exposes the expected integration points.
+`safety_and_diagnostics` does not change gameplay values. It verifies the expected Advanced AE API and AQE unit roles during common setup, logs detected dependency versions, and prints estimated storage/co-processor values. `fail_fast_on_integration_mismatch = true` makes the mod stop loading if Advanced AE no longer exposes the expected integration points.
 
 AE2 network/crafting optimizations are handled by the separate `ae2-crafting-optimizer` mod.
 

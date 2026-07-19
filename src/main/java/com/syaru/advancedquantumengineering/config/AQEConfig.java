@@ -1,11 +1,20 @@
 package com.syaru.advancedquantumengineering.config;
 
+import com.electronwill.nightconfig.core.file.CommentedFileConfig;
+import com.syaru.advancedquantumengineering.AdvancedQuantumEngineering;
 import java.math.BigInteger;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.world.level.storage.LevelResource;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.config.ModConfig;
 
 public final class AQEConfig {
+    public static final String CONFIG_FILE_NAME = "advanced_quantum_engineering.toml";
+    public static final String LEGACY_CONFIG_FILE_NAME = "advanced_quantum_engineering-server.toml";
     public static final long MIN_STORAGE_BYTES = 1L;
     public static final int MIN_COPROCESSORS = 1;
     public static final int MIN_DATA_ENTANGLER_MULTIPLIER = 1;
@@ -50,115 +59,63 @@ public final class AQEConfig {
 
     static {
         ForgeConfigSpec.Builder builder = new ForgeConfigSpec.Builder();
-        builder.push("modifiedQuantumCore");
+        builder.comment("通常量子コンピュータの性能設定 / Standard Quantum Computer tuning")
+                .push("quantum_computer");
         CORE_STORAGE = builder
-                .comment(
-                        "Base crafting storage in bytes supplied by the modified core.",
-                        "Default: " + DEFAULT_CORE_STORAGE + " bytes (256 MiB).",
-                        "Range: " + MIN_STORAGE_BYTES + " - " + MAX_UNIT_STORAGE_BYTES + " bytes.",
-                        "Use the modified storage block for bulk capacity.")
-                .defineInRange("coreStorage", DEFAULT_CORE_STORAGE, MIN_STORAGE_BYTES, MAX_UNIT_STORAGE_BYTES);
+                .comment("改造量子コアの基本ストレージ量（byte）")
+                .defineInRange("core_storage_bytes", DEFAULT_CORE_STORAGE, MIN_STORAGE_BYTES, MAX_UNIT_STORAGE_BYTES);
+        STORAGE_BLOCK_BYTES = builder
+                .comment("改造量子ストレージ1個の容量（byte）")
+                .defineInRange("storage_block_bytes", DEFAULT_STORAGE_BLOCK_BYTES, MIN_STORAGE_BYTES, MAX_UNIT_STORAGE_BYTES);
         BASE_COPROCESSORS = builder
-                .comment(
-                        "Base Advanced AE crafting threads exposed by the modified core.",
-                        "Default: " + DEFAULT_BASE_COPROCESSORS + ".",
-                        "Range: " + MIN_COPROCESSORS + " - " + MAX_BASE_COPROCESSORS + ".",
-                        "Higher values increase crafting calculation load; the default assumes one primary Astral-scale modified Quantum Computer per server.")
-                .defineInRange("baseCoprocessors", DEFAULT_BASE_COPROCESSORS, MIN_COPROCESSORS, MAX_BASE_COPROCESSORS);
+                .comment("改造量子コアの基本コプロセッサ数")
+                .defineInRange("core_coprocessors", DEFAULT_BASE_COPROCESSORS, MIN_COPROCESSORS, MAX_BASE_COPROCESSORS);
+        ACCELERATOR_THREADS = builder
+                .comment("改造量子アクセラレータ1個の処理スレッド数")
+                .defineInRange("accelerator_threads", DEFAULT_ACCELERATOR_THREADS, MIN_COPROCESSORS, MAX_ACCELERATOR_THREADS);
+        MULTI_THREADER_MULTIPLIER = builder
+                .comment("改造マルチスレッダーのコプロセッサ倍率")
+                .defineInRange("multi_threader_multiplier", DEFAULT_MULTI_THREADER_MULTIPLIER, MIN_COPROCESSORS, MAX_MULTI_THREADER_MULTIPLIER);
+        DATA_ENTANGLER_MULTIPLIER = builder
+                .comment("改造データエンタングラーのストレージ倍率")
+                .defineInRange("data_entangler_multiplier", DEFAULT_DATA_ENTANGLER_MULTIPLIER, MIN_DATA_ENTANGLER_MULTIPLIER, MAX_DATA_ENTANGLER_MULTIPLIER);
         builder.pop();
 
-        builder.push("bigIntegerQuantumCore");
+        builder.comment("終盤量子コアの性能設定 / Endgame Quantum Core tuning")
+                .push("endgame_cores");
+        EXPERIMENTAL_CORE_STORAGE = builder
+                .comment("long型量子コアの容量（byte）")
+                .defineInRange("long_core_storage_bytes", DEFAULT_EXPERIMENTAL_CORE_STORAGE, MIN_STORAGE_BYTES, MAX_SAFE_EFFECTIVE_STORAGE_BYTES);
+        EXPERIMENTAL_CORE_COPROCESSORS = builder
+                .comment("long型量子コアのコプロセッサ数")
+                .defineInRange("long_core_coprocessors", DEFAULT_EXPERIMENTAL_CORE_COPROCESSORS, MIN_COPROCESSORS, MAX_SAFE_EFFECTIVE_COPROCESSORS);
         BIG_INTEGER_CORE_DECIMAL_DIGITS = builder
-                .comment(
-                        "Number of decimal digits in the BigInteger Quantum Core capacity.",
-                        "The exact capacity is 10^digits - 1 bytes; no decimal-string value is required.",
-                        "Default: " + DEFAULT_BIG_INTEGER_DECIMAL_DIGITS + " digits.",
-                        "Range: " + MIN_BIG_INTEGER_DECIMAL_DIGITS + " - " + MAX_BIG_INTEGER_DECIMAL_DIGITS + " digits.",
-                        "ACO applies its own binary-bit safety limit when its optional backend is active.")
+                .comment("BigInteger量子コア容量の桁数。容量は 10^digits - 1 byte")
                 .defineInRange(
-                        "storageDecimalDigits",
+                        "big_integer_storage_digits",
                         DEFAULT_BIG_INTEGER_DECIMAL_DIGITS,
                         MIN_BIG_INTEGER_DECIMAL_DIGITS,
                         MAX_BIG_INTEGER_DECIMAL_DIGITS);
         BIG_INTEGER_CORE_COPROCESSORS = builder
-                .comment(
-                        "Co-processors supplied by the BigInteger Quantum Core.",
-                        "This remains an int because AE2 and Advanced AE expose co-processors as int.",
-                        "Default: " + DEFAULT_BIG_INTEGER_CORE_COPROCESSORS + ".",
-                        "Range: " + MIN_COPROCESSORS + " - " + MAX_SAFE_EFFECTIVE_COPROCESSORS + ".")
+                .comment("BigInteger量子コアのコプロセッサ数")
                 .defineInRange(
-                        "coprocessors",
+                        "big_integer_coprocessors",
                         DEFAULT_BIG_INTEGER_CORE_COPROCESSORS,
                         MIN_COPROCESSORS,
                         MAX_SAFE_EFFECTIVE_COPROCESSORS);
         builder.pop();
 
-        builder.push("modifiedQuantumStorage");
-        STORAGE_BLOCK_BYTES = builder
-                .comment(
-                        "Crafting storage in bytes supplied by the modified Quantum Storage block.",
-                        "Default: " + DEFAULT_STORAGE_BLOCK_BYTES + " bytes, the safe per-unit ceiling.",
-                        "Range: " + MIN_STORAGE_BYTES + " - " + MAX_UNIT_STORAGE_BYTES + " bytes.",
-                        "The default gives about 256 TiB with one modified Data Entangler.")
-                .defineInRange("storageBlockBytes", DEFAULT_STORAGE_BLOCK_BYTES, MIN_STORAGE_BYTES, MAX_UNIT_STORAGE_BYTES);
-        builder.pop();
-
-        builder.push("modifiedQuantumAccelerator");
-        ACCELERATOR_THREADS = builder
-                .comment(
-                        "Advanced AE crafting threads supplied by one modified Quantum Accelerator block.",
-                        "Default: " + DEFAULT_ACCELERATOR_THREADS + ".",
-                        "Range: " + MIN_COPROCESSORS + " - " + MAX_ACCELERATOR_THREADS + ".",
-                        "The default is tuned for Astral Mekanism's 256-process top tier without using int-max values.")
-                .defineInRange("acceleratorThreads", DEFAULT_ACCELERATOR_THREADS, MIN_COPROCESSORS, MAX_ACCELERATOR_THREADS);
-        builder.pop();
-
-        builder.push("modifiedQuantumMultiThreader");
-        MULTI_THREADER_MULTIPLIER = builder
-                .comment(
-                        "Co-processor multiplier supplied by one modified Quantum Computer Multi-Threader.",
-                        "Default: x" + DEFAULT_MULTI_THREADER_MULTIPLIER + ".",
-                        "Range: " + MIN_COPROCESSORS + " - " + MAX_MULTI_THREADER_MULTIPLIER + ".",
-                        "This occupies Advanced AE's normal Multi-Threader structure slot and does not add an extra slot.")
-                .defineInRange("multiThreaderMultiplier", DEFAULT_MULTI_THREADER_MULTIPLIER, MIN_COPROCESSORS, MAX_MULTI_THREADER_MULTIPLIER);
-        builder.pop();
-
-        builder.push("modifiedDataEntangler");
-        DATA_ENTANGLER_MULTIPLIER = builder
-                .comment(
-                        "Storage multiplier supplied by the modified Quantum Data Entangler.",
-                        "Default: " + DEFAULT_DATA_ENTANGLER_MULTIPLIER + ".",
-                        "Range: " + MIN_DATA_ENTANGLER_MULTIPLIER + " - " + MAX_DATA_ENTANGLER_MULTIPLIER + ".")
-                .defineInRange("dataEntanglerMultiplier", DEFAULT_DATA_ENTANGLER_MULTIPLIER, MIN_DATA_ENTANGLER_MULTIPLIER, MAX_DATA_ENTANGLER_MULTIPLIER);
-        builder.pop();
-
-        builder.push("experimentalQuantumCore");
-        EXPERIMENTAL_CORE_STORAGE = builder
-                .comment(
-                        "Experimental core storage in bytes.",
-                        "Default: " + DEFAULT_EXPERIMENTAL_CORE_STORAGE + " bytes (Long.MAX_VALUE - 1).",
-                        "Range: " + MIN_STORAGE_BYTES + " - " + MAX_SAFE_EFFECTIVE_STORAGE_BYTES + " bytes.",
-                        "AQE clamps Advanced AE's effective storage calculation to the same ceiling to avoid overflow after additions or Data Entangler multipliers.")
-                .defineInRange("experimentalCoreStorage", DEFAULT_EXPERIMENTAL_CORE_STORAGE, MIN_STORAGE_BYTES, MAX_SAFE_EFFECTIVE_STORAGE_BYTES);
-        EXPERIMENTAL_CORE_COPROCESSORS = builder
-                .comment(
-                        "Experimental core co-processors.",
-                        "Default: " + DEFAULT_EXPERIMENTAL_CORE_COPROCESSORS + " (Integer.MAX_VALUE - 1).",
-                        "Range: " + MIN_COPROCESSORS + " - " + MAX_SAFE_EFFECTIVE_COPROCESSORS + ".",
-                        "This allows AE2 to add one execution slot without integer overflow.")
-                .defineInRange("experimentalCoreCoprocessors", DEFAULT_EXPERIMENTAL_CORE_COPROCESSORS, MIN_COPROCESSORS, MAX_SAFE_EFFECTIVE_COPROCESSORS);
-        builder.pop();
-
-        builder.push("diagnostics");
+        builder.comment("互換性検査と診断ログ / Safety and diagnostics")
+                .push("safety_and_diagnostics");
         FAIL_FAST_ON_INTEGRATION_MISMATCH = builder
-                .comment("Crash during common setup if AQE can detect that Advanced AE integration no longer matches the expected API. This avoids silently loading fake-looking blocks after an incompatible Advanced AE update.")
-                .define("failFastOnIntegrationMismatch", true);
+                .comment("Advanced AEの互換性不一致を検出した場合、起動を停止する")
+                .define("fail_fast_on_integration_mismatch", true);
         WARN_ON_EXTREME_CONFIG_VALUES = builder
-                .comment("Log warnings for very high storage or co-processor settings. This does not change gameplay values.")
-                .define("warnOnExtremeConfigValues", true);
+                .comment("極端な容量・コプロセッサ設定をログへ警告する")
+                .define("warn_on_extreme_values", true);
         DIAGNOSTIC_MODIFIED_ACCELERATOR_COUNT = builder
-                .comment("Only used for startup diagnostics to estimate a full modified Quantum Computer. It does not change structure rules or performance.")
-                .defineInRange("diagnosticModifiedAcceleratorCount", 121, 0, 512);
+                .comment("起動診断で計算に使う改造アクセラレータ数。ゲーム性能には影響しない")
+                .defineInRange("diagnostic_accelerator_count", 121, 0, 512);
         builder.pop();
 
         SPEC = builder.build();
@@ -168,7 +125,68 @@ public final class AQEConfig {
     }
 
     public static void register() {
-        ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, SPEC);
+        ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, SPEC, CONFIG_FILE_NAME);
+    }
+
+    public static boolean migrateLegacyServerConfig(MinecraftServer server) {
+        Path legacyPath = server.getWorldPath(LevelResource.ROOT)
+                .resolve("serverconfig")
+                .resolve(LEGACY_CONFIG_FILE_NAME);
+        if (!Files.isRegularFile(legacyPath)) {
+            return false;
+        }
+
+        try (CommentedFileConfig legacy = CommentedFileConfig.of(legacyPath)) {
+            legacy.load();
+            migrateLong(legacy, "modifiedQuantumCore.coreStorage", CORE_STORAGE);
+            migrateLong(legacy, "modifiedQuantumStorage.storageBlockBytes", STORAGE_BLOCK_BYTES);
+            migrateInt(legacy, "modifiedQuantumCore.baseCoprocessors", BASE_COPROCESSORS);
+            migrateInt(legacy, "modifiedQuantumAccelerator.acceleratorThreads", ACCELERATOR_THREADS);
+            migrateInt(legacy, "modifiedQuantumMultiThreader.multiThreaderMultiplier", MULTI_THREADER_MULTIPLIER);
+            migrateInt(legacy, "modifiedDataEntangler.dataEntanglerMultiplier", DATA_ENTANGLER_MULTIPLIER);
+            migrateLong(legacy, "experimentalQuantumCore.experimentalCoreStorage", EXPERIMENTAL_CORE_STORAGE);
+            migrateInt(legacy, "experimentalQuantumCore.experimentalCoreCoprocessors", EXPERIMENTAL_CORE_COPROCESSORS);
+            migrateInt(legacy, "bigIntegerQuantumCore.storageDecimalDigits", BIG_INTEGER_CORE_DECIMAL_DIGITS);
+            migrateInt(legacy, "bigIntegerQuantumCore.coprocessors", BIG_INTEGER_CORE_COPROCESSORS);
+            migrateBoolean(legacy, "diagnostics.failFastOnIntegrationMismatch", FAIL_FAST_ON_INTEGRATION_MISMATCH);
+            migrateBoolean(legacy, "diagnostics.warnOnExtremeConfigValues", WARN_ON_EXTREME_CONFIG_VALUES);
+            migrateInt(legacy, "diagnostics.diagnosticModifiedAcceleratorCount", DIAGNOSTIC_MODIFIED_ACCELERATOR_COUNT);
+        } catch (RuntimeException exception) {
+            AdvancedQuantumEngineering.LOGGER.error("Failed to read legacy AQE config {}", legacyPath, exception);
+            return false;
+        }
+
+        try {
+            SPEC.save();
+            Path migratedPath = legacyPath.resolveSibling(LEGACY_CONFIG_FILE_NAME + ".migrated");
+            Files.move(legacyPath, migratedPath, StandardCopyOption.REPLACE_EXISTING);
+            AdvancedQuantumEngineering.LOGGER.info("Migrated legacy AQE config to config/{}", CONFIG_FILE_NAME);
+            return true;
+        } catch (Exception exception) {
+            AdvancedQuantumEngineering.LOGGER.error("AQE values were loaded, but the migrated config could not be saved", exception);
+            return false;
+        }
+    }
+
+    private static void migrateLong(CommentedFileConfig legacy, String path, ForgeConfigSpec.LongValue target) {
+        Object value = legacy.get(path);
+        if (value instanceof Number number) {
+            target.set(number.longValue());
+        }
+    }
+
+    private static void migrateInt(CommentedFileConfig legacy, String path, ForgeConfigSpec.IntValue target) {
+        Object value = legacy.get(path);
+        if (value instanceof Number number) {
+            target.set(number.intValue());
+        }
+    }
+
+    private static void migrateBoolean(CommentedFileConfig legacy, String path, ForgeConfigSpec.BooleanValue target) {
+        Object value = legacy.get(path);
+        if (value instanceof Boolean booleanValue) {
+            target.set(booleanValue);
+        }
     }
 
     public static long getCoreStorage() {
