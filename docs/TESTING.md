@@ -154,12 +154,15 @@ Run every case on a copied world before enabling experimental ACO execution path
    - multiple standard crafting jobs run concurrently;
    - save/restart restores every job and exact remaining capacity;
    - tooltip reports the local long-compatible backend.
-2. AQE 2.0.1 with ACO 1.3.1 on both sides:
+2. AQE 2.0.2 with ACO 1.3.1 on both sides:
    - startup logs report `aco:big_crafting_v3`;
    - normal jobs and ACO-native reservations share one capacity;
    - save/restart restores the same runtime and job IDs;
    - chunk unload/reload does not duplicate or release reservations;
    - client status packets do not exceed their configured page/byte limits.
+   - AQE reads `config/advanced_quantum_engineering.toml` on both sides;
+   - an old per-world AQE server config is imported once and renamed with a
+     `.migrated` suffix.
 3. Remove ACO after saving native state:
    - AQE still starts;
    - opaque state remains in `aqeBigCraftingHost`;
