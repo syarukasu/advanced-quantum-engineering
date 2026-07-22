@@ -4,6 +4,7 @@ import com.syaru.advancedquantumengineering.config.AQEConfig;
 import com.syaru.advancedquantumengineering.integration.AQEBigCraftingHost;
 import com.syaru.advancedquantumengineering.integration.AQEBigIntegerCpuAccess;
 import com.syaru.advancedquantumengineering.integration.BigCraftingIntegration;
+import com.syaru.advancedquantumengineering.integration.BigIntegerCapacitySnapshot;
 import com.syaru.advancedquantumengineering.integration.BigIntegerCapacityMath;
 import com.syaru.advancedquantumengineering.integration.BigIntegerStorageProvider;
 import java.math.BigInteger;
@@ -64,6 +65,15 @@ public abstract class AdvCraftingCPUClusterMixin implements AQEBigIntegerCpuAcce
 
     @Unique
     private BigInteger aqe$availableCapacity = BigInteger.ZERO;
+
+    @Unique
+    private BigInteger aqe$displayTotal = BigInteger.ZERO;
+
+    @Unique
+    private BigInteger aqe$displayUsed = BigInteger.ZERO;
+
+    @Unique
+    private BigIntegerCapacitySnapshot aqe$displaySnapshot = BigIntegerCapacitySnapshot.zero();
 
     @ModifyConstant(method = "addBlockEntity", constant = @Constant(intValue = 16))
     private int advancedQuantumEngineering$raiseSingleUnitThreadLimit(int original) {
@@ -134,7 +144,28 @@ public abstract class AdvCraftingCPUClusterMixin implements AQEBigIntegerCpuAcce
 
     @Override
     public BigInteger aqe$getAvailableCraftingCapacity() {
-        return aqe$availableCapacity;
+        AQEBigCraftingHost host = aqe$bigHost;
+        return host == null ? aqe$availableCapacity : host.available();
+    }
+
+    @Override
+    public synchronized BigIntegerCapacitySnapshot aqe$getCapacityDisplaySnapshot() {
+        AQEBigCraftingHost host = aqe$bigHost;
+        BigInteger total = aqe$physicalCapacity;
+        BigInteger used = host == null ? BigInteger.ZERO : host.reserved();
+        // 一度取得した使用中容量から空きを導出し、三値が別時点になる競合を避ける。
+        BigInteger available = total.subtract(used);
+        if (available.signum() < 0) {
+            available = BigInteger.ZERO;
+        }
+
+        // 容量が変化した時だけ最大16,384桁の10進変換を行い、通常の画面更新を軽く保つ。
+        if (!total.equals(aqe$displayTotal) || !used.equals(aqe$displayUsed)) {
+            aqe$displaySnapshot = BigIntegerCapacitySnapshot.capture(total, used, available);
+            aqe$displayTotal = total;
+            aqe$displayUsed = used;
+        }
+        return aqe$displaySnapshot;
     }
 
     @Override

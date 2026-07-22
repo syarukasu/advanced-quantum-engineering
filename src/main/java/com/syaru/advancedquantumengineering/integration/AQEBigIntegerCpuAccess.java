@@ -12,5 +12,7 @@ public interface AQEBigIntegerCpuAccess {
 
     BigInteger aqe$getAvailableCraftingCapacity();
 
+    BigIntegerCapacitySnapshot aqe$getCapacityDisplaySnapshot();
+
     String aqe$getBigIntegerBackendId();
 }
