@@ -4,7 +4,7 @@ Advanced Quantum Engineering 2.0.0 adds upgraded Advanced AE Quantum Computer pa
 
 This mod targets Minecraft 1.20.1, Forge 47.4.18+, Java 17, Applied Energistics 2 15.4.10, Advanced AE 1.3.5-1.20.1, and AE2 Omni Cells 1.1.6.
 
-AE2 crafting and synchronization optimization code is intentionally not part of this mod. It lives in the separate `ae2-crafting-optimizer` project so Quantum Computer block behavior and AE2 optimization behavior can be tested independently. Compatible ACO 1.3.x releases are optional: AQE runs without ACO and uses its versioned BigInteger host API when it is present and enabled.
+AE2 crafting and synchronization optimization code is intentionally not part of this mod. It lives in the separate `ae2-crafting-optimizer` project so Quantum Computer block behavior and AE2 optimization behavior can be tested independently. Compatible ACO 1.3.x and 1.4.x releases are optional: AQE runs without ACO and uses its versioned BigInteger host API when it is present and enabled.
 
 ## Blocks
 
@@ -149,12 +149,12 @@ AE2 network/crafting optimizations are handled by the separate `ae2-crafting-opt
 `ae2-crafting-optimizer` is not a required dependency.
 
 - AQE without ACO: the BigInteger core forms normally, exact aggregate capacity is retained, and standard AE2/Advanced AE jobs remain supported.
-- AQE with compatible ACO 1.3.x (tested with 1.3.1): AQE reflectively activates ACO BigInteger host API v3. Standard long jobs and native BigInteger jobs share one physical capacity ledger.
+- AQE with compatible ACO `[1.3.0,1.5.0)` releases: AQE reflectively activates ACO BigInteger host API v3. Standard long jobs and native BigInteger jobs share one physical capacity ledger.
 - ACO present but disabled: AQE uses its local long-compatible backend.
 - ACO removed while native BigInteger state exists: AQE preserves the opaque versioned NBT and keeps its reservation unavailable, preventing double spending. Reinstalling compatible ACO restores the state.
 - Unsupported ACO version: the default fail-fast diagnostic stops loading instead of discarding or misreading saved state.
 
-AQE contains no direct ACO class reference or Gradle dependency. The optional adapter resolves and validates API v3 only after Forge reports a compatible ACO 1.3.x release as loaded.
+AQE contains no direct ACO class reference or Gradle dependency. The optional adapter resolves and validates API v3 only after Forge reports a compatible ACO `[1.3.0,1.5.0)` release as loaded.
 
 ## Build
 

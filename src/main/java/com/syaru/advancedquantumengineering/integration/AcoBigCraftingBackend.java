@@ -9,7 +9,7 @@ import java.util.Objects;
 import java.util.UUID;
 import net.minecraft.nbt.CompoundTag;
 
-/** Loaded reflectively only when a compatible optional ACO 1.3.x API v3 is present. */
+/** 互換範囲内の任意ACO 1.3.xまたは1.4.x API v3がある場合だけReflectionで読み込む。 */
 public final class AcoBigCraftingBackend implements AQEBigCraftingBackend {
     private static final int REQUIRED_API_VERSION = 3;
     private static final String API_CLASS =
