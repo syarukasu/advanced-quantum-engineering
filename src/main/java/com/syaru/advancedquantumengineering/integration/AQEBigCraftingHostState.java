@@ -62,7 +62,10 @@ final class AQEBigCraftingHostState {
 
     private static BigInteger checkedCount(BigInteger value, String name) {
         Objects.requireNonNull(value, name);
-        if (value.signum() < 0 || value.bitLength() > AQEConfig.MAX_BIG_INTEGER_BITS) {
+        // NBT復元時もbit境界だけでなく、16,384桁の厳密な最大値を検査する。
+        if (value.signum() < 0
+                || value.bitLength() > AQEConfig.MAX_BIG_INTEGER_BITS
+                || value.compareTo(AQEConfig.MAX_BIG_INTEGER_VALUE) > 0) {
             throw new IllegalArgumentException(name + " is negative or exceeds AQE's BigInteger limit");
         }
         return value;
