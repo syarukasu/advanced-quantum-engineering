@@ -112,7 +112,7 @@ AQE does not require ACO in Gradle or `mods.toml`. The `ae2_crafting_optimizer` 
 `BigCraftingIntegration` selects one of two implementations:
 
 - `LocalBigCraftingHost`: exact aggregate capacity and standard Advanced AE job reservations; opaque ACO state remains paused and reserved.
-- `AcoBigCraftingBackend`: a reflection-only adapter for compatible ACO 1.3.x API v3 releases. It creates or loads an ACO `BigCraftingHostRuntime`, registers it by the owning Quantum Computer cluster, and shares capacity between standard and native BigInteger reservations.
+- `AcoBigCraftingBackend`: a reflection-only adapter for compatible ACO `[1.3.0,1.5.0)` API v3 releases. It creates or loads an ACO `BigCraftingHostRuntime`, registers it by the owning Quantum Computer cluster, and shares capacity between standard and native BigInteger reservations.
 
 Capacity reconciliation and NBT snapshot creation lock the same ACO runtime monitor, so a scheduler cannot observe a half-updated capacity or save a payload with a mismatched reservation summary. Removing ACO does not delete its payload. Reinstalling the compatible backend restores it and then replaces persisted standard reservations with Advanced AE's authoritative active-job map.
 
