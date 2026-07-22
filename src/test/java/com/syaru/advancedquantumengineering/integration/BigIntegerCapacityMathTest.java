@@ -3,6 +3,7 @@ package com.syaru.advancedquantumengineering.integration;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import com.syaru.advancedquantumengineering.config.AQEConfig;
 import java.math.BigInteger;
 import org.junit.jupiter.api.Test;
 
@@ -30,5 +31,21 @@ class BigIntegerCapacityMathTest {
                 IllegalStateException.class,
                 () -> BigIntegerCapacityMath.multiply(
                         BigInteger.ONE.shiftLeft(63), BigInteger.TWO, "capacity", 64));
+    }
+
+    @Test
+    void enforcesTheExactSharedSixteenThousandDigitLimit() {
+        assertEquals(
+                AQEConfig.MAX_BIG_INTEGER_VALUE,
+                BigIntegerCapacityMath.checkedNonNegative(
+                        AQEConfig.MAX_BIG_INTEGER_VALUE,
+                        "capacity",
+                        AQEConfig.MAX_BIG_INTEGER_BITS));
+        assertThrows(
+                IllegalStateException.class,
+                () -> BigIntegerCapacityMath.checkedNonNegative(
+                        AQEConfig.MAX_BIG_INTEGER_VALUE.add(BigInteger.ONE),
+                        "capacity",
+                        AQEConfig.MAX_BIG_INTEGER_BITS));
     }
 }

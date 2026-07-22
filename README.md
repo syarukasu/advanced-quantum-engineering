@@ -32,7 +32,9 @@ AE2 crafting and synchronization optimization code is intentionally not part of 
 - `advanced_quantum_engineering:big_integer_quantum_core`
   - Experimental core slot replacement for `advanced_ae:quantum_core`
   - Default raw storage: `10^64 - 1` bytes
-  - Configurable by decimal digit count, from 20 to 315,640 digits
+  - Configurable by decimal digit count, from 20 to 16,372 digits
+  - The complete structure has an exact `10^16384 - 1` ceiling; 12 decimal
+    digits are reserved for summed storage and Data Entangler multiplication
   - Default co-processors: 2,147,483,646
   - Has no survival recipe
 

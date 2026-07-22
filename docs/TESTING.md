@@ -146,6 +146,11 @@ Expected for AQE:
 
 ## BigInteger and Optional ACO Matrix
 
+The exact AQE/ACO shared capacity ceiling is `10^16384 - 1`. Verify that this
+value round-trips and that `10^16384` fails closed without truncation. The raw
+core Config stops at 16,372 digits to leave 12 digits for structure aggregation
+and Data Entangler multiplication.
+
 Run every case on a copied world before enabling experimental ACO execution paths. Do not treat `gradlew test` alone as full runtime qualification.
 
 1. AQE 2.0.0 without ACO:

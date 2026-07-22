@@ -110,7 +110,7 @@ Advanced AE does, however, support multiple `AdvCraftingCPU` jobs inside one Qua
 
 ACO 1.3.x provides an explicit host API for native BigInteger jobs. AQE discovers API v3 only when Forge reports a version in `[1.3.0,1.4.0)` as loaded, then validates the API field and every reflected method. The adapter uses reflection and has no ACO type in AQE's production classpath. If ACO is absent, AQE uses a local exact-capacity ledger. If ACO state is present but the backend is unavailable, its opaque NBT and reservation are preserved instead of discarded.
 
-The selected NBT representation is a canonical non-negative two's-complement byte array with a schema version and a 1,048,576-bit hard limit. This avoids decimal parsing ambiguity and prevents unbounded allocation from malformed save data.
+The selected NBT representation is a canonical non-negative two's-complement byte array with a schema version and an exact `10^16384 - 1` hard limit (54,427 bits at the boundary). AQE limits a raw configurable core to 16,372 decimal digits, leaving 12 digits of headroom for structure aggregation and the Data Entangler multiplier. This avoids decimal parsing ambiguity and prevents unbounded allocation from malformed save data.
 
 ## Compatibility Risk
 
