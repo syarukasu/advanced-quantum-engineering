@@ -11,7 +11,7 @@ import net.minecraftforge.fml.ModList;
 /** Optional ACO integration loader with no eager reference to ACO classes. */
 public final class BigCraftingIntegration {
     public static final String ACO_MODID = "ae2_crafting_optimizer";
-    public static final String SUPPORTED_ACO_VERSION_RANGE = "[1.3.0,1.4.0)";
+    public static final String SUPPORTED_ACO_VERSION_RANGE = "[1.3.0,1.5.0)";
     private static final String ADAPTER_CLASS =
             "com.syaru.advancedquantumengineering.integration.AcoBigCraftingBackend";
 

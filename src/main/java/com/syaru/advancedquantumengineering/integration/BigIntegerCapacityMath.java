@@ -1,5 +1,6 @@
 package com.syaru.advancedquantumengineering.integration;
 
+import com.syaru.advancedquantumengineering.config.AQEConfig;
 import java.math.BigInteger;
 import java.util.Objects;
 
@@ -15,12 +16,16 @@ public final class BigIntegerCapacityMath {
             String name,
             int maximumBits) {
         BigInteger checked = Objects.requireNonNull(value, name);
+        // 0以下のbit設定は上限検査として成立しないため拒否する。
         if (maximumBits < 1) {
             throw new IllegalArgumentException("maximumBits must be positive");
         }
-        if (checked.signum() < 0 || checked.bitLength() > maximumBits) {
+        // 設定bit上限に加え、16,384桁の厳密な共通上限も必ず適用する。
+        if (checked.signum() < 0
+                || checked.bitLength() > maximumBits
+                || checked.compareTo(AQEConfig.MAX_BIG_INTEGER_VALUE) > 0) {
             throw new IllegalStateException(
-                    name + " is negative or exceeds the " + maximumBits + "-bit safety limit");
+                    name + " is negative or exceeds AQE's BigInteger safety limit");
         }
         return checked;
     }

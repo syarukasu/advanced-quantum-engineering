@@ -33,10 +33,20 @@ public final class AQEConfig {
     public static final int DEFAULT_DATA_ENTANGLER_MULTIPLIER = 8;
     public static final long DEFAULT_EXPERIMENTAL_CORE_STORAGE = MAX_SAFE_EFFECTIVE_STORAGE_BYTES;
     public static final int DEFAULT_EXPERIMENTAL_CORE_COPROCESSORS = MAX_SAFE_EFFECTIVE_COPROCESSORS;
-    public static final int MAX_BIG_INTEGER_BITS = 1_048_576;
+    /** ACOと共有する、構造全体の実効容量の10進桁上限。 */
+    public static final int MAX_EFFECTIVE_BIG_INTEGER_DECIMAL_DIGITS = 16_384;
+    /** 16,384桁を越えない構造全体の厳密な最大容量。 */
+    public static final BigInteger MAX_BIG_INTEGER_VALUE = BigInteger.TEN
+            .pow(MAX_EFFECTIVE_BIG_INTEGER_DECIMAL_DIGITS)
+            .subtract(BigInteger.ONE);
+    /** 厳密な最大容量を表現するために必要なbit数。 */
+    public static final int MAX_BIG_INTEGER_BITS = MAX_BIG_INTEGER_VALUE.bitLength();
     public static final int MIN_BIG_INTEGER_DECIMAL_DIGITS = 20;
-    // Leaves headroom for Advanced AE's summed Data Entangler multiplier.
-    public static final int MAX_BIG_INTEGER_DECIMAL_DIGITS = 315_640;
+    /** Advanced AEの加算とData Entangler乗算へ12桁分を残す。 */
+    public static final int BIG_INTEGER_STRUCTURE_HEADROOM_DECIMAL_DIGITS = 12;
+    public static final int MAX_BIG_INTEGER_DECIMAL_DIGITS =
+            MAX_EFFECTIVE_BIG_INTEGER_DECIMAL_DIGITS
+                    - BIG_INTEGER_STRUCTURE_HEADROOM_DECIMAL_DIGITS;
     public static final int DEFAULT_BIG_INTEGER_DECIMAL_DIGITS = 64;
     public static final int DEFAULT_BIG_INTEGER_CORE_COPROCESSORS = MAX_SAFE_EFFECTIVE_COPROCESSORS;
 
@@ -90,7 +100,9 @@ public final class AQEConfig {
                 .comment("long型量子コアのコプロセッサ数")
                 .defineInRange("long_core_coprocessors", DEFAULT_EXPERIMENTAL_CORE_COPROCESSORS, MIN_COPROCESSORS, MAX_SAFE_EFFECTIVE_COPROCESSORS);
         BIG_INTEGER_CORE_DECIMAL_DIGITS = builder
-                .comment("BigInteger量子コア容量の桁数。容量は 10^digits - 1 byte")
+                .comment(
+                        "BigInteger量子コア容量の桁数。容量は 10^digits - 1 byte",
+                        "構造全体の上限16384桁に対し、加算・Data Entangler用の12桁を予約")
                 .defineInRange(
                         "big_integer_storage_digits",
                         DEFAULT_BIG_INTEGER_DECIMAL_DIGITS,
