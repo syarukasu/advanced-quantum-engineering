@@ -86,7 +86,10 @@ final class LocalBigCraftingHost implements AQEBigCraftingHost {
 
     private static BigInteger checked(BigInteger value, String name) {
         Objects.requireNonNull(value, name);
-        if (value.signum() < 0 || value.bitLength() > AQEConfig.MAX_BIG_INTEGER_BITS) {
+        // ACO未導入時も、AQEとACOで共有する16,384桁上限を越える値は保持しない。
+        if (value.signum() < 0
+                || value.bitLength() > AQEConfig.MAX_BIG_INTEGER_BITS
+                || value.compareTo(AQEConfig.MAX_BIG_INTEGER_VALUE) > 0) {
             throw new IllegalArgumentException(name + " is negative or exceeds AQE's BigInteger limit");
         }
         return value;

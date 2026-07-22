@@ -1,5 +1,19 @@
 # Changelog
 
+## [Unreleased]
+
+## 2.1.0 - 2026-07-22
+
+### Changed
+
+- Aligned AQE with ACO's exact `10^16384 - 1` BigInteger ceiling.
+- Limited the raw BigInteger core Config to 16,372 digits, reserving 12 decimal
+  digits for summed structure storage and Data Entangler multiplication.
+- Applied the exact ceiling to capacity arithmetic, local fallback accounting,
+  and AQE host-state NBT instead of relying on a bit-length approximation.
+- Extended optional ACO API v3 compatibility to `[1.3.0,1.5.0)`, including
+  ACO 1.4.x, without making ACO a required dependency.
+
 ## 2.0.2 - 2026-07-19
 
 ### Changed
