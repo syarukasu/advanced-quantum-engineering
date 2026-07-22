@@ -3,7 +3,6 @@ package com.syaru.advancedquantumengineering.mixin;
 import appeng.api.networking.crafting.ICraftingCPU;
 import appeng.menu.me.crafting.CraftConfirmMenu;
 import appeng.menu.me.crafting.CraftingCPURecord;
-import com.syaru.advancedquantumengineering.config.AQEConfig;
 import com.syaru.advancedquantumengineering.integration.AQEBigIntegerCpuAccess;
 import com.syaru.advancedquantumengineering.integration.BigIntegerCpuDisplayMarker;
 import net.minecraft.network.chat.Component;
@@ -25,16 +24,19 @@ public abstract class CraftConfirmMenuMixin {
             CraftingCPURecord record,
             boolean hasCpu,
             CallbackInfo ci) {
+        // CPU未選択時や同期前は、確認画面の既定状態を維持する。
         if (record == null || cpuName == null) {
             return;
         }
 
         ICraftingCPU cpu = ((CraftingCPURecordAccessor) (Object) record).aqe$getCpu();
+        // 通常AE2 CPUにはAdvanced AEクラスタへの参照がないため対象外とする。
         if (!(cpu instanceof AdvCraftingCPU)) {
             return;
         }
 
         AdvCraftingCPUCluster cluster = ((AdvCraftingCPUAccessor) (Object) cpu).aqe$getCluster();
+        // BigIntegerコアを含まないAdvanced AE CPUへ表示マーカーを付けない。
         if (!(cluster instanceof AQEBigIntegerCpuAccess access)
                 || !access.aqe$hasBigIntegerQuantumCore()) {
             return;
@@ -42,6 +44,6 @@ public abstract class CraftConfirmMenuMixin {
 
         cpuName = BigIntegerCpuDisplayMarker.mark(
                 cpuName,
-                AQEConfig.getBigIntegerCoreStorageDecimalDigits());
+                access.aqe$getCapacityDisplaySnapshot());
     }
 }

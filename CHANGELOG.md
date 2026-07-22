@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+## 2.1.1 - 2026-07-23
+
+### Changed
+
+- Replaced the fixed `10^N - 1 B` BigInteger CPU label with a server-authoritative
+  live snapshot of total, reserved, and available Quantum Computer capacity.
+- Made the CPU list show currently reserved capacity while tooltips show the
+  complete total/reserved/available state.
+- Included summed storage blocks and Data Entangler multiplication in the value
+  shown to players instead of formatting the raw core Config alone.
+- Kept the display marker bounded to at most 19 leading digits per value, so a
+  16,384-digit capacity does not produce a 16,384-character sync payload.
+- Kept values through the signed-long range exact and used a leading-digit plus
+  total-digit representation only for larger values.
+
 ## 2.1.0 - 2026-07-22
 
 ### Changed

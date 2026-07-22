@@ -103,6 +103,8 @@ It also injects at the head of `AdvCraftingCPUCluster.getCoProcessors()` and ret
 
 `TooltipsMixin` injects at the head of AE2's `Tooltips.getByteAmount(long)` only for values at or above one TiB. AE2 15.4.10's byte divisor table stops before TiB-scale values, while Advanced AE's CPU selection tooltip calls `Tooltips.ofBytes` for CPU storage. The mixin returns a normal `Tooltips.Amount` using T/P/E units, so very large AQE CPU values render without changing actual storage or crafting behavior.
 
+`AdvCraftingCPUNameMixin` and `CraftConfirmMenuMixin` attach a display-only capacity snapshot to AE2's existing synchronized CPU-name component. The snapshot comes from the Quantum Computer host Ledger and contains physical, reserved, and available capacity summaries. Each value carries its decimal digit count and at most 19 leading digits. This keeps the marker length fixed instead of serializing a complete value that may contain 16,384 digits. The client list and confirmation Mixins only format this snapshot; they never feed it back into capacity reservation or crafting decisions. A malformed or missing marker falls back to the original AE2/Advanced AE display.
+
 AE2 crafting/network optimizations are not implemented in AQE. They are kept in the separate `ae2-crafting-optimizer` project to keep Quantum Computer behavior and AE2 optimization behavior independently testable.
 
 ## Optional ACO Backend
