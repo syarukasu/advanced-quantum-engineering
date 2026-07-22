@@ -77,6 +77,12 @@ Expected:
 - Jobs above available storage are rejected as CPU too small.
 - Rejection does not crash.
 - Advanced AE's crafting CPU selection tooltip can be opened with TiB/PiB/EiB-scale AQE CPU values without an AE2 `Tooltips.getByteAmount` array bounds crash.
+- The BigInteger CPU list shows the capacity currently reserved by active jobs.
+- Hovering the BigInteger CPU shows total, in-use, and available capacity from the server Ledger.
+- Adding storage or changing the Data Entangler multiplier changes the displayed total after the structure recalculates.
+- Starting, completing, and cancelling a job updates in-use and available values without changing the total.
+- Values through `Long.MAX_VALUE` are shown exactly; larger values use bounded leading digits plus their total decimal digit count.
+- A maximum 16,384-digit capacity does not put the complete decimal value in the synchronized CPU name.
 
 ## Co-Processors
 
@@ -159,7 +165,7 @@ Run every case on a copied world before enabling experimental ACO execution path
    - multiple standard crafting jobs run concurrently;
    - save/restart restores every job and exact remaining capacity;
    - tooltip reports the local long-compatible backend.
-2. AQE 2.1.0 with ACO 1.4.0 on both sides:
+2. AQE 2.1.1 with compatible ACO 1.4.x on both sides:
    - startup logs report `aco:big_crafting_v3`;
    - normal jobs and ACO-native reservations share one capacity;
    - save/restart restores the same runtime and job IDs;

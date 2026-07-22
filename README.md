@@ -1,6 +1,6 @@
 # Advanced Quantum Engineering
 
-Advanced Quantum Engineering 2.0.0 adds upgraded Advanced AE Quantum Computer parts that use the original Quantum Computer multiblock system.
+Advanced Quantum Engineering 2.1.1 adds upgraded Advanced AE Quantum Computer parts that use the original Quantum Computer multiblock system.
 
 This mod targets Minecraft 1.20.1, Forge 47.4.18+, Java 17, Applied Energistics 2 15.4.10, Advanced AE 1.3.5-1.20.1, and AE2 Omni Cells 1.1.6.
 
@@ -79,6 +79,8 @@ The experimental core exposes maximum test values:
 AQE 2.0.0 calculates the complete structure capacity, including summed storage and Data Entangler multipliers, with checked `BigInteger` arithmetic. Advanced AE's existing `long` API receives a saturated facade, while AQE keeps the exact physical, reserved, and available totals internally. Co-processors remain bounded to `2,147,483,646` because AE2 and Advanced AE expose that value as `int`.
 
 One standard AE2 crafting plan is still limited by AE2 15.4.10's signed-`long` contracts. The BigInteger total is useful because one Advanced AE Quantum Computer can own multiple active jobs: AQE accounts all of those normal jobs against the same exact capacity without overflowing their sum. Native jobs larger than `long` require the optional ACO BigInteger execution API; AQE does not replace the normal AE2 terminal or pretend that a standard AE2 plan has a wider count type.
+
+BigInteger Quantum CPU screens use the server's current capacity Ledger rather than rebuilding `10^N - 1 B` from Config. The CPU list shows the capacity reserved by active jobs, and tooltips show the complete physical, reserved, and available totals after storage aggregation and Data Entangler multiplication. Values through 19 decimal digits are shown exactly. Larger values show their leading grouped digits and total digit count. The hidden synchronization marker remains bounded even at the 16,384-digit ceiling; it never sends the full huge decimal value to every client.
 
 ## Recipe
 
