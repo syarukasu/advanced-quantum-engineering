@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+## 2.1.2 - 2026-07-23
+
+### Changed
+
+- Replaced AE2's fixed `k` crafting CPU capacity label with automatic
+  `B / k / M / G / T / P / E` promotion throughout the signed-long range.
+- Applied the same long-capacity formatting to AE2 and Advanced AE CPU lists.
+- Changed values above `Long.MAX_VALUE` to a bounded scientific notation based
+  on the actual server-synchronized capacity, such as `9.999 x 10^63 B`.
+- Kept capacity accounting, reservations, and crafting behavior unchanged.
+
 ## 2.1.1 - 2026-07-23
 
 ### Changed
