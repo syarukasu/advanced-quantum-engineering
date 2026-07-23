@@ -61,16 +61,8 @@ public final class BigIntegerCpuDisplayMarker {
     }
 
     public static MutableComponent formatValue(BigIntegerCapacitySnapshot.DisplayValue value) {
-        // 19桁以内は省略せず、サーバーが扱っている値をそのまま表示する。
-        if (value.isExact()) {
-            return Component.translatable(
-                    "gui.advanced_quantum_engineering.capacity.exact",
-                    value.groupedLeadingDigits());
-        }
-        return Component.translatable(
-                "gui.advanced_quantum_engineering.capacity.truncated",
-                value.groupedLeadingDigits(),
-                value.decimalDigits());
+        // long範囲は二進単位へ繰り上げ、超過値は実際の先頭桁を使う指数表記へ切り替える。
+        return Component.literal(CraftingStorageFormatter.format(value));
     }
 
     public static MutableComponent formatUsed(BigIntegerCapacitySnapshot snapshot) {
@@ -99,14 +91,8 @@ public final class BigIntegerCpuDisplayMarker {
     }
 
     private static MutableComponent formatCompactValue(BigIntegerCapacitySnapshot.DisplayValue value) {
-        // 一覧内で12桁までの値は、読める長さを保ったまま正確に表示する。
-        if (value.isExact() && value.decimalDigits() <= 12) {
-            return formatValue(value);
-        }
-        return Component.translatable(
-                "gui.advanced_quantum_engineering.capacity.truncated",
-                value.firstGroupedDigits(),
-                value.decimalDigits());
+        // 通常単位と指数表記のどちらもCPU一覧へ収まる固定長なので、Tooltipと同じ表記を使う。
+        return formatValue(value);
     }
 
     private static boolean isDirectCapacityMarker(Component component) {
