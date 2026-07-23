@@ -17,6 +17,16 @@ public interface AQEBigCraftingHost extends AutoCloseable {
 
     long availableAsSaturatedLong();
 
+    /** ACOが所有するBigInteger親Job数。任意Backendが未対応なら0を返す。 */
+    default int bigJobCount() {
+        return 0;
+    }
+
+    /** Big親JobのためにAdvanced AEへ委譲中の子Window数。 */
+    default int managedChildJobCount() {
+        return 0;
+    }
+
     String backendId();
 
     boolean hasPersistentState();

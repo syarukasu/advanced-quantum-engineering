@@ -76,11 +76,11 @@ The experimental core exposes maximum test values:
 - Storage: `9,223,372,036,854,775,806` bytes, `Long.MAX_VALUE - 1`
 - Co-processors: `2,147,483,646`, `Integer.MAX_VALUE - 1`
 
-AQE 2.0.0 calculates the complete structure capacity, including summed storage and Data Entangler multipliers, with checked `BigInteger` arithmetic. Advanced AE's existing `long` API receives a saturated facade, while AQE keeps the exact physical, reserved, and available totals internally. Co-processors remain bounded to `2,147,483,646` because AE2 and Advanced AE expose that value as `int`.
+AQE 2.1.2 calculates the complete structure capacity, including summed storage and Data Entangler multipliers, with checked `BigInteger` arithmetic. Advanced AE's existing `long` API receives a saturated facade, while AQE keeps the exact physical, reserved, and available totals internally. Co-processors remain bounded to `2,147,483,646` because AE2 and Advanced AE expose that value as `int`.
 
 One standard AE2 crafting plan is still limited by AE2 15.4.10's signed-`long` contracts. The BigInteger total is useful because one Advanced AE Quantum Computer can own multiple active jobs: AQE accounts all of those normal jobs against the same exact capacity without overflowing their sum. Native jobs larger than `long` require the optional ACO BigInteger execution API; AQE does not replace the normal AE2 terminal or pretend that a standard AE2 plan has a wider count type.
 
-BigInteger Quantum CPU screens use the server's current capacity Ledger rather than rebuilding `10^N - 1 B` from Config. The CPU list shows the capacity reserved by active jobs, and tooltips show the complete physical, reserved, and available totals after storage aggregation and Data Entangler multiplication. Values through 19 decimal digits are shown exactly. Larger values show their leading grouped digits and total digit count. The hidden synchronization marker remains bounded even at the 16,384-digit ceiling; it never sends the full huge decimal value to every client.
+BigInteger Quantum CPU screens use the server's current capacity Ledger rather than rebuilding `10^N - 1 B` from Config. The CPU list shows the capacity reserved by active jobs, and tooltips show the complete physical, reserved, and available totals after storage aggregation and Data Entangler multiplication. They also show total active jobs and native BigInteger parent jobs; temporary ACO child windows are excluded from the total to avoid double display. Values through 19 decimal digits are shown exactly. Larger values show their leading grouped digits and total digit count. The hidden synchronization marker remains bounded even at the 16,384-digit ceiling; it never sends the full huge decimal value to every client.
 
 ## Recipe
 
@@ -151,7 +151,7 @@ AE2 network/crafting optimizations are handled by the separate `ae2-crafting-opt
 `ae2-crafting-optimizer` is not a required dependency.
 
 - AQE without ACO: the BigInteger core forms normally, exact aggregate capacity is retained, and standard AE2/Advanced AE jobs remain supported.
-- AQE with compatible ACO `[1.3.0,1.5.0)` releases: AQE reflectively activates ACO BigInteger host API v3. Standard long jobs and native BigInteger jobs share one physical capacity ledger.
+- AQE with compatible ACO `[1.3.0,1.5.0)` releases: AQE reflectively activates ACO BigInteger host API v3. Standard long jobs and exact BigInteger parent jobs share one physical capacity ledger. ACO divides a deterministic parent into recipe-specific checked-long child windows and keeps their reservations tied to the parent.
 - ACO present but disabled: AQE uses its local long-compatible backend.
 - ACO removed while native BigInteger state exists: AQE preserves the opaque versioned NBT and keeps its reservation unavailable, preventing double spending. Reinstalling compatible ACO restores the state.
 - Unsupported ACO version: the default fail-fast diagnostic stops loading instead of discarding or misreading saved state.
@@ -168,7 +168,7 @@ Run:
 gradlew.bat clean build
 ```
 
-The generated jar is written under `build/libs/advanced-quantum-engineering-2.0.0.jar`.
+The generated jar is written under `build/libs/advanced-quantum-engineering-2.1.2.jar`.
 
 When cloning outside the original Prism instance, either recreate the expected local `mods` folder layout or replace the dependency coordinates in `build.gradle` with public Maven coordinates.
 
