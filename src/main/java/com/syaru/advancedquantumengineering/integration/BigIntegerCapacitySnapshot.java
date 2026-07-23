@@ -12,28 +12,45 @@ import java.util.Optional;
 public record BigIntegerCapacitySnapshot(
         DisplayValue total,
         DisplayValue used,
-        DisplayValue available) {
+        DisplayValue available,
+        int activeJobs,
+        int bigJobs) {
     private static final String VALUE_SEPARATOR = ";";
 
     public BigIntegerCapacitySnapshot {
         Objects.requireNonNull(total, "total");
         Objects.requireNonNull(used, "used");
         Objects.requireNonNull(available, "available");
+        // 件数はサーバー権威値なので、負数や親Job数が総数を超える壊れたSnapshotを拒否する。
+        if (activeJobs < 0 || bigJobs < 0 || bigJobs > activeJobs) {
+            throw new IllegalArgumentException("invalid AQE crafting job counts");
+        }
     }
 
     public static BigIntegerCapacitySnapshot capture(
             BigInteger total,
             BigInteger used,
             BigInteger available) {
+        return capture(total, used, available, 0, 0);
+    }
+
+    public static BigIntegerCapacitySnapshot capture(
+            BigInteger total,
+            BigInteger used,
+            BigInteger available,
+            int activeJobs,
+            int bigJobs) {
         return new BigIntegerCapacitySnapshot(
                 DisplayValue.capture(total),
                 DisplayValue.capture(used),
-                DisplayValue.capture(available));
+                DisplayValue.capture(available),
+                activeJobs,
+                bigJobs);
     }
 
     public static BigIntegerCapacitySnapshot zero() {
         DisplayValue zero = DisplayValue.capture(BigInteger.ZERO);
-        return new BigIntegerCapacitySnapshot(zero, zero, zero);
+        return new BigIntegerCapacitySnapshot(zero, zero, zero, 0, 0);
     }
 
     public String encode() {
@@ -41,7 +58,11 @@ public record BigIntegerCapacitySnapshot(
                 + VALUE_SEPARATOR
                 + used.encode()
                 + VALUE_SEPARATOR
-                + available.encode();
+                + available.encode()
+                + VALUE_SEPARATOR
+                + activeJobs
+                + VALUE_SEPARATOR
+                + bigJobs;
     }
 
     public static Optional<BigIntegerCapacitySnapshot> decode(String encoded) {
@@ -51,8 +72,8 @@ public record BigIntegerCapacitySnapshot(
         }
 
         String[] values = encoded.split(VALUE_SEPARATOR, -1);
-        // 総容量・使用中・空き容量の三値がそろった場合だけ採用する。
-        if (values.length != 3) {
+        // v2の三値とv3の三値＋Job件数以外は曖昧に解釈しない。
+        if (values.length != 3 && values.length != 5) {
             return Optional.empty();
         }
 
@@ -63,10 +84,18 @@ public record BigIntegerCapacitySnapshot(
         if (total.isEmpty() || used.isEmpty() || available.isEmpty()) {
             return Optional.empty();
         }
-        return Optional.of(new BigIntegerCapacitySnapshot(
-                total.orElseThrow(),
-                used.orElseThrow(),
-                available.orElseThrow()));
+        try {
+            int activeJobs = values.length == 5 ? Integer.parseInt(values[3]) : 0;
+            int bigJobs = values.length == 5 ? Integer.parseInt(values[4]) : 0;
+            return Optional.of(new BigIntegerCapacitySnapshot(
+                    total.orElseThrow(),
+                    used.orElseThrow(),
+                    available.orElseThrow(),
+                    activeJobs,
+                    bigJobs));
+        } catch (IllegalArgumentException malformedCounts) {
+            return Optional.empty();
+        }
     }
 
     /** 最大19桁だけを保持し、long範囲は正確に、それ以上は固定長で表す。 */

@@ -73,6 +73,12 @@ public abstract class AdvCraftingCPUClusterMixin implements AQEBigIntegerCpuAcce
     private BigInteger aqe$displayUsed = BigInteger.ZERO;
 
     @Unique
+    private int aqe$displayActiveJobs;
+
+    @Unique
+    private int aqe$displayBigJobs;
+
+    @Unique
     private BigIntegerCapacitySnapshot aqe$displaySnapshot = BigIntegerCapacitySnapshot.zero();
 
     @ModifyConstant(method = "addBlockEntity", constant = @Constant(intValue = 16))
@@ -158,12 +164,27 @@ public abstract class AdvCraftingCPUClusterMixin implements AQEBigIntegerCpuAcce
         if (available.signum() < 0) {
             available = BigInteger.ZERO;
         }
+        int bigJobs = host == null ? 0 : Math.max(0, host.bigJobCount());
+        int managedChildren = host == null ? 0 : Math.max(0, host.managedChildJobCount());
+        // ACO子WindowはBig親Jobの内部実装なので、通常Job件数との二重表示から除外する。
+        int standardJobs = Math.max(0, activeCpus.size() - Math.min(activeCpus.size(), managedChildren));
+        long combinedJobs = (long) standardJobs + bigJobs;
+        // 異常な外部Backend件数でも表示用intをoverflowさせず、容量会計には影響させない。
+        int activeJobs = combinedJobs >= Integer.MAX_VALUE
+                ? Integer.MAX_VALUE
+                : (int) combinedJobs;
 
         // 容量が変化した時だけ最大16,384桁の10進変換を行い、通常の画面更新を軽く保つ。
-        if (!total.equals(aqe$displayTotal) || !used.equals(aqe$displayUsed)) {
-            aqe$displaySnapshot = BigIntegerCapacitySnapshot.capture(total, used, available);
+        if (!total.equals(aqe$displayTotal)
+                || !used.equals(aqe$displayUsed)
+                || activeJobs != aqe$displayActiveJobs
+                || bigJobs != aqe$displayBigJobs) {
+            aqe$displaySnapshot = BigIntegerCapacitySnapshot.capture(
+                    total, used, available, activeJobs, bigJobs);
             aqe$displayTotal = total;
             aqe$displayUsed = used;
+            aqe$displayActiveJobs = activeJobs;
+            aqe$displayBigJobs = bigJobs;
         }
         return aqe$displaySnapshot;
     }

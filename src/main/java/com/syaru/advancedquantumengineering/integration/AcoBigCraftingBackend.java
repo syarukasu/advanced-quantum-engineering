@@ -116,6 +116,8 @@ public final class AcoBigCraftingBackend implements AQEBigCraftingBackend {
             Method available,
             Method availableAsSaturatedLong,
             Method bigReserved,
+            Method bigJobCount,
+            Method managedChildJobCount,
             Method save) {
         private RuntimeMethods(Class<?> hostType) throws NoSuchMethodException {
             this(
@@ -126,7 +128,18 @@ public final class AcoBigCraftingBackend implements AQEBigCraftingBackend {
                     hostType.getMethod("available"),
                     hostType.getMethod("availableAsSaturatedLong"),
                     hostType.getMethod("bigReserved"),
+                    optionalMethod(hostType, "bigJobCount"),
+                    optionalMethod(hostType, "managedChildJobCount"),
                     hostType.getMethod("save"));
+        }
+
+        private static Method optionalMethod(Class<?> owner, String name) {
+            try {
+                return owner.getMethod(name);
+            } catch (NoSuchMethodException unsupportedOlderApi) {
+                // ACO API v3初期版には件数getterがないため、容量連携を壊さず表示だけ0へ戻す。
+                return null;
+            }
         }
     }
 
@@ -177,6 +190,22 @@ public final class AcoBigCraftingBackend implements AQEBigCraftingBackend {
         public long availableAsSaturatedLong() {
             ensureOpen();
             return ((Number) invoke(methods.availableAsSaturatedLong(), runtime)).longValue();
+        }
+
+        @Override
+        public int bigJobCount() {
+            ensureOpen();
+            Method method = methods.bigJobCount();
+            // 古いACO API v3では件数同期を持たないため、容量機能を維持して0件表示にする。
+            return method == null ? 0 : ((Number) invoke(method, runtime)).intValue();
+        }
+
+        @Override
+        public int managedChildJobCount() {
+            ensureOpen();
+            Method method = methods.managedChildJobCount();
+            // 子Window件数も任意拡張なので、旧Backendでは通常Jobとの区別を行わない。
+            return method == null ? 0 : ((Number) invoke(method, runtime)).intValue();
         }
 
         @Override

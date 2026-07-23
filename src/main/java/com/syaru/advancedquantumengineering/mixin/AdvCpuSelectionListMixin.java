@@ -71,6 +71,7 @@ public abstract class AdvCpuSelectionListMixin {
         var content = new ArrayList<>(tooltip.getContent());
         content.add(BigIntegerCpuDisplayMarker.formatUsed(snapshot).withStyle(ChatFormatting.GRAY));
         content.add(BigIntegerCpuDisplayMarker.formatAvailable(snapshot).withStyle(ChatFormatting.GRAY));
+        content.add(BigIntegerCpuDisplayMarker.formatJobs(snapshot).withStyle(ChatFormatting.GRAY));
         cir.setReturnValue(new Tooltip(content));
     }
 
