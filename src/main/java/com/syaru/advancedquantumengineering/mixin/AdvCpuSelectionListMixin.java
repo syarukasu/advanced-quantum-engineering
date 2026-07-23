@@ -5,6 +5,7 @@ import appeng.client.gui.Tooltip;
 import appeng.core.localization.Tooltips;
 import com.syaru.advancedquantumengineering.integration.BigIntegerCapacitySnapshot;
 import com.syaru.advancedquantumengineering.integration.BigIntegerCpuDisplayMarker;
+import com.syaru.advancedquantumengineering.integration.CraftingStorageFormatter;
 import java.util.ArrayList;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.MutableComponent;
@@ -29,9 +30,14 @@ public abstract class AdvCpuSelectionListMixin {
         BigIntegerCapacitySnapshot snapshot = BigIntegerCpuDisplayMarker
                 .readSnapshot(entry.name())
                 .orElse(null);
-        // BigInteger CPUだけ、一覧の数値を現在予約中の容量へ差し替える。
+        // BigInteger CPUは、longでは表せない現在予約量をサーバー同期値から表示する。
         if (snapshot != null) {
             cir.setReturnValue(BigIntegerCpuDisplayMarker.formatCompactUsed(snapshot).getString());
+            return;
+        }
+        // Advanced AE側のT打ち止めを使わず、long範囲の最大Eまで同じ規則で繰り上げる。
+        if (entry.storage() >= 0L) {
+            cir.setReturnValue(CraftingStorageFormatter.format(entry.storage()));
         }
     }
 

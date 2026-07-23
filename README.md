@@ -1,6 +1,6 @@
 # Advanced Quantum Engineering
 
-Advanced Quantum Engineering 2.1.1 adds upgraded Advanced AE Quantum Computer parts that use the original Quantum Computer multiblock system.
+Advanced Quantum Engineering 2.1.2 adds upgraded Advanced AE Quantum Computer parts that use the original Quantum Computer multiblock system.
 
 This mod targets Minecraft 1.20.1, Forge 47.4.18+, Java 17, Applied Energistics 2 15.4.10, Advanced AE 1.3.5-1.20.1, and AE2 Omni Cells 1.1.6.
 

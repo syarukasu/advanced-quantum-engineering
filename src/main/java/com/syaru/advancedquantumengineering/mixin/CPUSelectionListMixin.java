@@ -7,6 +7,7 @@ import appeng.core.localization.Tooltips;
 import appeng.menu.me.crafting.CraftingStatusMenu.CraftingCpuListEntry;
 import com.syaru.advancedquantumengineering.integration.BigIntegerCapacitySnapshot;
 import com.syaru.advancedquantumengineering.integration.BigIntegerCpuDisplayMarker;
+import com.syaru.advancedquantumengineering.integration.CraftingStorageFormatter;
 import java.util.ArrayList;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.MutableComponent;
@@ -29,9 +30,14 @@ public abstract class CPUSelectionListMixin {
         BigIntegerCapacitySnapshot snapshot = BigIntegerCpuDisplayMarker
                 .readSnapshot(entry.name())
                 .orElse(null);
-        // BigInteger CPUだけ、固定上限ではなく現在予約中の容量へ表示を切り替える。
+        // BigInteger CPUは、longでは表せない現在予約量をサーバー同期値から表示する。
         if (snapshot != null) {
             cir.setReturnValue(BigIntegerCpuDisplayMarker.formatCompactUsed(snapshot).getString());
+            return;
+        }
+        // 通常CPUもAE2のk固定表示を使わず、実容量に応じてEまで単位を繰り上げる。
+        if (entry.storage() >= 0L) {
+            cir.setReturnValue(CraftingStorageFormatter.format(entry.storage()));
         }
     }
 
