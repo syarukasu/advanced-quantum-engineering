@@ -11,7 +11,7 @@ gradlew.bat clean build
 Expected:
 
 - Build succeeds.
-- Jar exists under `build/libs/advanced-quantum-engineering-2.1.2.jar`.
+- Jar exists under `build/libs/advanced-quantum-engineering-2.2.0.jar`.
 
 ## Registration
 
@@ -160,13 +160,13 @@ and Data Entangler multiplication.
 
 Run every case on a copied world before enabling experimental ACO execution paths. Do not treat `gradlew test` alone as full runtime qualification.
 
-1. AQE 2.1.2 without ACO:
+1. AQE 2.2.0 without ACO:
    - client and dedicated server start;
    - BigInteger core forms the original Advanced AE structure;
    - multiple standard crafting jobs run concurrently;
    - save/restart restores every job and exact remaining capacity;
    - tooltip reports the local long-compatible backend.
-2. AQE 2.1.2 with compatible ACO 1.4.x on both sides:
+2. AQE 2.2.0 with compatible ACO 1.4.x or 1.5.x on both sides:
    - startup logs report `aco:big_crafting_v3`;
    - normal jobs and ACO-native reservations share one capacity;
    - a deterministic individual-long-overflow plan is retained as one parent
@@ -185,7 +185,7 @@ Run every case on a copied world before enabling experimental ACO execution path
    - opaque state remains in `aqeBigCraftingHost`;
    - paused reservation remains unavailable to standard jobs;
    - no item or job is silently completed, cancelled, or deleted.
-4. Reinstall compatible ACO `[1.3.0,1.5.0)`:
+4. Reinstall compatible ACO `[1.3.0,1.6.0)`:
    - the preserved state restores;
    - standard reservations are reconciled from Advanced AE;
    - no reservation is counted twice.
