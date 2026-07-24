@@ -114,11 +114,28 @@ AQE does not require ACO in Gradle or `mods.toml`. The `ae2_crafting_optimizer` 
 `BigCraftingIntegration` selects one of two implementations:
 
 - `LocalBigCraftingHost`: exact aggregate capacity and standard Advanced AE job reservations; opaque ACO state remains paused and reserved.
-- `AcoBigCraftingBackend`: a reflection-only adapter for compatible ACO `[1.3.0,1.5.0)` API v3 releases. It creates or loads an ACO `BigCraftingHostRuntime`, registers it by the owning Quantum Computer cluster, and shares capacity between standard and native BigInteger reservations.
+- `AcoBigCraftingBackend`: a reflection-only adapter for compatible ACO `[1.3.0,1.6.0)` API v3 releases. It creates or loads an ACO `BigCraftingHostRuntime`, registers it by the owning Quantum Computer cluster, and shares capacity between standard and native BigInteger reservations.
+
+ACO 1.5 exposes a concrete AE2 `CraftingPlan` facade and keeps exact plan and
+inventory values in ACO-owned sidecars. AQE does not inspect those internal
+sidecars. The registered API v3 host remains the only integration boundary, so
+ACO can change its AE2 compatibility implementation without introducing a
+production class dependency in AQE.
 
 Capacity reconciliation and NBT snapshot creation lock the same ACO runtime monitor, so a scheduler cannot observe a half-updated capacity or save a payload with a mismatched reservation summary. Removing ACO does not delete its payload. Reinstalling the compatible backend restores it and then replaces persisted standard reservations with Advanced AE's authoritative active-job map.
 
-Standard AE2 plans remain signed-long objects. AQE 2.0.0 does not patch a normal terminal packet or `CraftingPlan` into a fake wider type. A single larger-than-long native job must enter through ACO's explicit BigInteger API; multiple normal Advanced AE jobs already consume the exact BigInteger total.
+Standard AE2 plans remain signed-long objects. AQE does not patch a normal
+terminal packet or `CraftingPlan` field into a fake wider primitive. Compatible
+ACO may submit an explicit exact BigInteger parent plan to the registered host.
+ACO then asks Advanced AE to run only checked-long child windows; AQE and ACO
+remove each temporary child reservation from the standard-job total once it is
+bound to the parent transaction. Multiple standard and BigInteger parent jobs
+therefore consume one exact physical-capacity ledger without double charging.
+
+The optional API also reports parent and managed-child counts when those methods
+exist. AQE subtracts managed child windows from `activeCpus` before adding the
+BigInteger parent count to its display snapshot. Earlier API v3 builds remain
+loadable and report zero optional counts.
 
 ## Known Risk
 

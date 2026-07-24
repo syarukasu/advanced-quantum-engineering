@@ -11,7 +11,7 @@ gradlew.bat clean build
 Expected:
 
 - Build succeeds.
-- Jar exists under `build/libs/advanced-quantum-engineering-2.0.0.jar`.
+- Jar exists under `build/libs/advanced-quantum-engineering-2.2.0.jar`.
 
 ## Registration
 
@@ -81,6 +81,7 @@ Expected:
 - Hovering the BigInteger CPU shows total, in-use, and available capacity from the server Ledger.
 - Adding storage or changing the Data Entangler multiplier changes the displayed total after the structure recalculates.
 - Starting, completing, and cancelling a job updates in-use and available values without changing the total.
+- Active-job and BigInteger-parent counts update without counting ACO-managed child windows twice.
 - Values through `Long.MAX_VALUE` are shown exactly; larger values use bounded leading digits plus their total decimal digit count.
 - A maximum 16,384-digit capacity does not put the complete decimal value in the synchronized CPU name.
 
@@ -159,15 +160,20 @@ and Data Entangler multiplication.
 
 Run every case on a copied world before enabling experimental ACO execution paths. Do not treat `gradlew test` alone as full runtime qualification.
 
-1. AQE 2.0.0 without ACO:
+1. AQE 2.2.0 without ACO:
    - client and dedicated server start;
    - BigInteger core forms the original Advanced AE structure;
    - multiple standard crafting jobs run concurrently;
    - save/restart restores every job and exact remaining capacity;
    - tooltip reports the local long-compatible backend.
-2. AQE 2.1.1 with compatible ACO 1.4.x on both sides:
+2. AQE 2.2.0 with compatible ACO 1.4.x or 1.5.x on both sides:
    - startup logs report `aco:big_crafting_v3`;
    - normal jobs and ACO-native reservations share one capacity;
+   - a deterministic individual-long-overflow plan is retained as one parent
+     and dispatched as recipe-specific checked-long child windows;
+   - the parent reservation is not charged again while a child CPU is active;
+   - the screen reports standard and BigInteger job counts without child-window
+     duplication;
    - save/restart restores the same runtime and job IDs;
    - chunk unload/reload does not duplicate or release reservations;
    - client status packets do not exceed their configured page/byte limits.
@@ -179,7 +185,7 @@ Run every case on a copied world before enabling experimental ACO execution path
    - opaque state remains in `aqeBigCraftingHost`;
    - paused reservation remains unavailable to standard jobs;
    - no item or job is silently completed, cancelled, or deleted.
-4. Reinstall compatible ACO `[1.3.0,1.5.0)`:
+4. Reinstall compatible ACO `[1.3.0,1.6.0)`:
    - the preserved state restores;
    - standard reservations are reconciled from Advanced AE;
    - no reservation is counted twice.
