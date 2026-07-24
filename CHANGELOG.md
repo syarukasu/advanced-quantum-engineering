@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## 2.2.0 - 2026-07-24
+
 ### Added
 
 - Added server-authoritative active-job and BigInteger-parent-job counts to the
@@ -9,12 +11,15 @@
 - Added optional reflection support for ACO runtime job-count methods while
   preserving compatibility with earlier API v3 implementations that do not
   expose them.
+- Extended optional ACO API v3 compatibility to `[1.3.0,1.6.0)`, including
+  ACO 1.5.x plan-sidecar and exact-inventory implementations.
 
 ### Changed
 
-- Kept ACO optional. When compatible ACO 1.4.x is present and enabled, AQE can
-  own exact BigInteger parent jobs and their checked-long Advanced AE child
-  windows; without ACO, the existing saturated-long fallback remains active.
+- Kept ACO optional. When compatible ACO 1.4.x or 1.5.x is present and
+  enabled, AQE can own exact BigInteger parent jobs and their checked-long
+  Advanced AE child windows; without ACO, the existing saturated-long fallback
+  remains active.
 - Excluded ACO-managed child windows from the displayed job total so one parent
   is not presented as both a BigInteger job and a temporary standard job.
 

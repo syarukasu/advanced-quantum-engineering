@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test;
 class OptionalAcoMetadataTest {
     @Test
     void runtimeContractMatchesOptionalDependencyMetadata() throws IOException {
-        assertEquals("[1.3.0,1.5.0)", BigCraftingIntegration.SUPPORTED_ACO_VERSION_RANGE);
+        assertEquals("[1.3.0,1.6.0)", BigCraftingIntegration.SUPPORTED_ACO_VERSION_RANGE);
 
         String metadata;
         try (InputStream input = getClass().getClassLoader()
@@ -30,5 +30,8 @@ class OptionalAcoMetadataTest {
                 acoSection.contains("versionRange = \""
                         + BigCraftingIntegration.SUPPORTED_ACO_VERSION_RANGE + "\""),
                 "runtime and metadata compatibility ranges must stay aligned");
+        assertTrue(
+                metadata.contains("ACO 1.3.x through 1.5.x"),
+                "mod description must advertise the supported optional ACO generations");
     }
 }
