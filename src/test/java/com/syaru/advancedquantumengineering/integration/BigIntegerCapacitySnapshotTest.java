@@ -25,6 +25,39 @@ class BigIntegerCapacitySnapshotTest {
     }
 
     @Test
+    void preservesActiveAndBigIntegerJobCounts() {
+        BigIntegerCapacitySnapshot snapshot = BigIntegerCapacitySnapshot.capture(
+                BigInteger.TEN.pow(64).subtract(BigInteger.ONE),
+                BigInteger.valueOf(123L),
+                BigInteger.TEN.pow(64).subtract(BigInteger.valueOf(124L)),
+                7,
+                3);
+
+        assertEquals(7, snapshot.activeJobs());
+        assertEquals(3, snapshot.bigJobs());
+        assertEquals(snapshot, BigIntegerCapacitySnapshot.decode(snapshot.encode()).orElseThrow());
+    }
+
+    @Test
+    void decodesLegacyCapacityMarkersWithZeroJobCounts() {
+        BigIntegerCapacitySnapshot current = BigIntegerCapacitySnapshot.capture(
+                BigInteger.valueOf(1_000L),
+                BigInteger.valueOf(250L),
+                BigInteger.valueOf(750L));
+        String legacy = String.join(
+                ";",
+                current.total().encode(),
+                current.used().encode(),
+                current.available().encode());
+
+        BigIntegerCapacitySnapshot decoded =
+                BigIntegerCapacitySnapshot.decode(legacy).orElseThrow();
+
+        assertEquals(0, decoded.activeJobs());
+        assertEquals(0, decoded.bigJobs());
+    }
+
+    @Test
     void representsActualHugeValuesInsteadOfConfiguredExponent() {
         BigInteger rawCore = BigInteger.TEN.pow(64).subtract(BigInteger.ONE);
         BigInteger physical = rawCore.multiply(BigInteger.valueOf(8L));

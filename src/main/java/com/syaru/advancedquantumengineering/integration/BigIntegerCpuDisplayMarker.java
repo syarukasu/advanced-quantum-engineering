@@ -8,8 +8,9 @@ import net.minecraft.network.chat.MutableComponent;
 
 /** AE2既存のCPU名同期へ、固定長のサーバー権威容量スナップショットを埋め込む。 */
 public final class BigIntegerCpuDisplayMarker {
-    private static final String PREFIX = "aqe:big_integer_capacity_v2=";
-    private static final String LEGACY_PREFIX = "aqe:big_integer_capacity_digits=";
+    private static final String PREFIX = "aqe:big_integer_capacity_v3=";
+    private static final String LEGACY_CAPACITY_PREFIX = "aqe:big_integer_capacity_v2=";
+    private static final String LEGACY_DIGITS_PREFIX = "aqe:big_integer_capacity_digits=";
     private static final int MAX_COMPONENTS_TO_SCAN = 64;
 
     private BigIntegerCpuDisplayMarker() {
@@ -48,9 +49,11 @@ public final class BigIntegerCpuDisplayMarker {
             Component current = pending.removeFirst();
             String insertion = current.getStyle().getInsertion();
             // 重複マーカーが残る旧Componentでは、後から追加された最新の正常値を採用する。
-            if (insertion != null && insertion.startsWith(PREFIX)) {
-                Optional<BigIntegerCapacitySnapshot> decoded = BigIntegerCapacitySnapshot.decode(
-                        insertion.substring(PREFIX.length()));
+            String payload = capacityPayload(insertion);
+            // v3または互換v2マーカーだけを固定長Snapshotとして復号する。
+            if (payload != null) {
+                Optional<BigIntegerCapacitySnapshot> decoded =
+                        BigIntegerCapacitySnapshot.decode(payload);
                 if (decoded.isPresent()) {
                     latest = decoded;
                 }
@@ -87,7 +90,16 @@ public final class BigIntegerCpuDisplayMarker {
         return Component.translatable(
                 "gui.advanced_quantum_engineering.capacity.live_summary",
                 formatValue(snapshot.used()),
-                formatValue(snapshot.total()));
+                formatValue(snapshot.total()),
+                snapshot.activeJobs(),
+                snapshot.bigJobs());
+    }
+
+    public static MutableComponent formatJobs(BigIntegerCapacitySnapshot snapshot) {
+        return Component.translatable(
+                "gui.advanced_quantum_engineering.capacity.jobs",
+                snapshot.activeJobs(),
+                snapshot.bigJobs());
     }
 
     private static MutableComponent formatCompactValue(BigIntegerCapacitySnapshot.DisplayValue value) {
@@ -98,6 +110,19 @@ public final class BigIntegerCpuDisplayMarker {
     private static boolean isDirectCapacityMarker(Component component) {
         String insertion = component.getStyle().getInsertion();
         return insertion != null
-                && (insertion.startsWith(PREFIX) || insertion.startsWith(LEGACY_PREFIX));
+                && (insertion.startsWith(PREFIX)
+                        || insertion.startsWith(LEGACY_CAPACITY_PREFIX)
+                        || insertion.startsWith(LEGACY_DIGITS_PREFIX));
+    }
+
+    private static String capacityPayload(String insertion) {
+        // 現行v3を優先し、v2はJob件数0としてBigIntegerCapacitySnapshot側で移行する。
+        if (insertion != null && insertion.startsWith(PREFIX)) {
+            return insertion.substring(PREFIX.length());
+        }
+        if (insertion != null && insertion.startsWith(LEGACY_CAPACITY_PREFIX)) {
+            return insertion.substring(LEGACY_CAPACITY_PREFIX.length());
+        }
+        return null;
     }
 }
