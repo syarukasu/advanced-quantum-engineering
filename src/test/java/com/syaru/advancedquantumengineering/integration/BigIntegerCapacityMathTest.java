@@ -9,6 +9,16 @@ import org.junit.jupiter.api.Test;
 
 class BigIntegerCapacityMathTest {
     @Test
+    void defaultsBigIntegerCoreToOneThousandTwentyFourDigits() {
+        assertEquals(1_024, AQEConfig.DEFAULT_BIG_INTEGER_DECIMAL_DIGITS);
+        BigInteger defaultStorage = BigInteger.TEN
+                .pow(AQEConfig.DEFAULT_BIG_INTEGER_DECIMAL_DIGITS)
+                .subtract(BigInteger.ONE);
+
+        assertEquals(1_024, defaultStorage.toString().length());
+    }
+
+    @Test
     void keepsExactCapacityBeyondLongAcrossStorageMultiplier() {
         BigInteger core = BigInteger.TEN.pow(64).subtract(BigInteger.ONE);
         BigInteger total = BigIntegerCapacityMath.multiply(core, BigInteger.valueOf(8), "capacity", 256);

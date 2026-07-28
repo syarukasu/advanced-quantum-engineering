@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+## 2.2.1 - 2026-07-28
+
+### Changed
+
+- Increased the default BigInteger Quantum Core raw capacity from
+  `10^64 - 1` bytes to `10^1024 - 1` bytes while preserving the configurable
+  16,372-digit raw-core limit and exact 16,384-digit structure ceiling.
+- Reobfuscated the production JAR as part of the normal Gradle build so
+  Minecraft references use their runtime names in distributed artifacts.
+
 ## 2.2.0 - 2026-07-24
 
 ### Added
