@@ -47,7 +47,8 @@ public final class AQEConfig {
     public static final int MAX_BIG_INTEGER_DECIMAL_DIGITS =
             MAX_EFFECTIVE_BIG_INTEGER_DECIMAL_DIGITS
                     - BIG_INTEGER_STRUCTURE_HEADROOM_DECIMAL_DIGITS;
-    public static final int DEFAULT_BIG_INTEGER_DECIMAL_DIGITS = 64;
+    /** AACのVector Jobを余裕を持って保持できる既定のBigInteger量子コア桁数。 */
+    public static final int DEFAULT_BIG_INTEGER_DECIMAL_DIGITS = 1_024;
     public static final int DEFAULT_BIG_INTEGER_CORE_COPROCESSORS = MAX_SAFE_EFFECTIVE_COPROCESSORS;
 
     private static final ForgeConfigSpec SPEC;

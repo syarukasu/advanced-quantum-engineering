@@ -49,7 +49,7 @@ The Advanced AE JAR is not modified. One targeted Mixin is used for the per-unit
   - `getAcceleratorThreads()` default: 2,147,483,646
 - `advanced_quantum_engineering:big_integer_quantum_core`
   - Unit type: `AAECraftingUnitType.QUANTUM_CORE`
-  - Exact capacity provider: `10^storageDecimalDigits - 1`, default 64 digits
+  - Exact capacity provider: `10^storageDecimalDigits - 1`, default 1,024 digits
   - Configurable raw-core range: 20 to 16,372 digits
   - Exact complete-structure ceiling: `10^16384 - 1`; 12 digits remain reserved
     for summed storage and Data Entangler multiplication
