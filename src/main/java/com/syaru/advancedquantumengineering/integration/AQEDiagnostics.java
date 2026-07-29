@@ -39,10 +39,17 @@ public final class AQEDiagnostics {
     }
 
     private static void logDetectedVersions() {
+        AdvancedQuantumEngineering.LOGGER.info(
+                "Detected AQE version: {}",
+                getVersion(AdvancedQuantumEngineering.MODID));
         AdvancedQuantumEngineering.LOGGER.info("Detected AE2 version: {}", getVersion("ae2"));
         AdvancedQuantumEngineering.LOGGER.info("Detected Advanced AE version: {}", getVersion(AdvancedAEIntegration.MODID));
         AdvancedQuantumEngineering.LOGGER.info("Detected AE2 Omni Cells version: {}", getVersion(OmniCellsIntegration.MODID));
         AdvancedQuantumEngineering.LOGGER.info("Detected optional ACO version: {}", getVersion(BigCraftingIntegration.ACO_MODID));
+        AdvancedQuantumEngineering.LOGGER.info(
+                "AQE BigInteger backend contract: id={}, optionalAcoActive={}",
+                BigCraftingIntegration.backendId(),
+                BigCraftingIntegration.isAcoBackendActive());
     }
 
     private static String getVersion(String modId) {

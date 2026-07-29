@@ -101,6 +101,25 @@ class BigIntegerCapacitySnapshotTest {
     }
 
     @Test
+    void rejectsInconsistentOrOverbookedCapacityLedgers() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> BigIntegerCapacitySnapshot.capture(
+                        BigInteger.valueOf(1_000L),
+                        BigInteger.valueOf(600L),
+                        BigInteger.valueOf(500L)));
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> BigIntegerCapacitySnapshot.capture(
+                        BigInteger.valueOf(1_000L),
+                        BigInteger.valueOf(1_001L),
+                        BigInteger.ZERO));
+        assertTrue(BigIntegerCapacitySnapshot.decode(
+                        "4,1000;3,600;3,500;1;0")
+                .isEmpty());
+    }
+
+    @Test
     void replacesOldCapacityMarkerWithoutReadingStaleState() {
         BigIntegerCapacitySnapshot idle = BigIntegerCapacitySnapshot.capture(
                 BigInteger.valueOf(1_000L),

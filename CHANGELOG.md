@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+## 2.2.2 - 2026-07-29
+
+### Fixed
+
+- Validated the server-authoritative capacity display ledger before encoding
+  it, including non-negative bounds, reservation limits, and
+  `total = used + available`.
+- Rejected inconsistent exact long-range display markers during decoding.
+- Kept an overbooked backend from emitting a negative or internally
+  inconsistent GUI snapshot while logging the backend mismatch once.
+- Logged AQE's own loaded version and selected optional backend contract during
+  startup so a stale or locally replaced JAR is identifiable.
+
 ## 2.2.1 - 2026-07-28
 
 ### Changed
