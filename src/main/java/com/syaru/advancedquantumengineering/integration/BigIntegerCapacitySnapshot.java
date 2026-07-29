@@ -25,6 +25,13 @@ public record BigIntegerCapacitySnapshot(
         if (activeJobs < 0 || bigJobs < 0 || bigJobs > activeJobs) {
             throw new IllegalArgumentException("invalid AQE crafting job counts");
         }
+        // long範囲の表示値は完全復元できるため、改ざん・競合した三値をそのまま表示しない。
+        if (total.isExact() && used.isExact() && available.isExact()) {
+            validateLedger(
+                    total.exactValue(),
+                    used.exactValue(),
+                    available.exactValue());
+        }
     }
 
     public static BigIntegerCapacitySnapshot capture(
@@ -40,6 +47,7 @@ public record BigIntegerCapacitySnapshot(
             BigInteger available,
             int activeJobs,
             int bigJobs) {
+        validateLedger(total, used, available);
         return new BigIntegerCapacitySnapshot(
                 DisplayValue.capture(total),
                 DisplayValue.capture(used),
@@ -51,6 +59,26 @@ public record BigIntegerCapacitySnapshot(
     public static BigIntegerCapacitySnapshot zero() {
         DisplayValue zero = DisplayValue.capture(BigInteger.ZERO);
         return new BigIntegerCapacitySnapshot(zero, zero, zero, 0, 0);
+    }
+
+    private static void validateLedger(
+            BigInteger total,
+            BigInteger used,
+            BigInteger available) {
+        BigInteger checkedTotal = Objects.requireNonNull(total, "total");
+        BigInteger checkedUsed = Objects.requireNonNull(used, "used");
+        BigInteger checkedAvailable = Objects.requireNonNull(available, "available");
+        // 容量、予約、空きはいずれも非負で、予約は物理容量を越えてはならない。
+        if (checkedTotal.signum() < 0
+                || checkedUsed.signum() < 0
+                || checkedAvailable.signum() < 0
+                || checkedUsed.compareTo(checkedTotal) > 0) {
+            throw new IllegalArgumentException("invalid AQE capacity ledger bounds");
+        }
+        // 三値を別々に同期しても、同一Snapshot内では必ず total = used + available を保つ。
+        if (!checkedTotal.equals(checkedUsed.add(checkedAvailable))) {
+            throw new IllegalArgumentException("inconsistent AQE capacity ledger");
+        }
     }
 
     public String encode() {
@@ -140,6 +168,14 @@ public record BigIntegerCapacitySnapshot(
 
         public boolean isExact() {
             return decimalDigits <= MAX_LEADING_DIGITS;
+        }
+
+        private BigInteger exactValue() {
+            // 呼出側はisExact()を確認済みで、省略された値を復元しようとしない。
+            if (!isExact()) {
+                throw new IllegalStateException("truncated capacity display value is not exact");
+            }
+            return new BigInteger(leadingDigits);
         }
 
         public String encode() {

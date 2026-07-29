@@ -1,5 +1,6 @@
 package com.syaru.advancedquantumengineering.mixin;
 
+import com.syaru.advancedquantumengineering.AdvancedQuantumEngineering;
 import com.syaru.advancedquantumengineering.config.AQEConfig;
 import com.syaru.advancedquantumengineering.integration.AQEBigCraftingHost;
 import com.syaru.advancedquantumengineering.integration.AQEBigIntegerCpuAccess;
@@ -81,6 +82,9 @@ public abstract class AdvCraftingCPUClusterMixin implements AQEBigIntegerCpuAcce
     @Unique
     private BigIntegerCapacitySnapshot aqe$displaySnapshot = BigIntegerCapacitySnapshot.zero();
 
+    @Unique
+    private boolean aqe$reportedOverbookedDisplayLedger;
+
     @ModifyConstant(method = "addBlockEntity", constant = @Constant(intValue = 16))
     private int advancedQuantumEngineering$raiseSingleUnitThreadLimit(int original) {
         return Math.max(original, AQEConfig.getMaxSingleUnitCoprocessors());
@@ -158,10 +162,24 @@ public abstract class AdvCraftingCPUClusterMixin implements AQEBigIntegerCpuAcce
     public synchronized BigIntegerCapacitySnapshot aqe$getCapacityDisplaySnapshot() {
         AQEBigCraftingHost host = aqe$bigHost;
         BigInteger total = aqe$physicalCapacity;
-        BigInteger used = host == null ? BigInteger.ZERO : host.reserved();
+        BigInteger reserved = host == null ? BigInteger.ZERO : host.reserved();
+        BigInteger used = reserved;
         // 一度取得した使用中容量から空きを導出し、三値が別時点になる競合を避ける。
         BigInteger available = total.subtract(used);
         if (available.signum() < 0) {
+            /*
+             * Backendの過剰予約を負の空き容量として同期するとGUI側の三値が破損する。
+             * 内部Ledgerには触れず、表示だけを物理上限へ固定し、一度だけ原因を記録する。
+             */
+            if (!aqe$reportedOverbookedDisplayLedger) {
+                aqe$reportedOverbookedDisplayLedger = true;
+                AdvancedQuantumEngineering.LOGGER.error(
+                        "AQE capacity display detected reservations above physical capacity: total={}, reserved={}, backend={}",
+                        total,
+                        used,
+                        host == null ? "aqe:uninitialized" : host.backendId());
+            }
+            used = total;
             available = BigInteger.ZERO;
         }
         int bigJobs = host == null ? 0 : Math.max(0, host.bigJobCount());
@@ -176,13 +194,14 @@ public abstract class AdvCraftingCPUClusterMixin implements AQEBigIntegerCpuAcce
 
         // 容量が変化した時だけ最大16,384桁の10進変換を行い、通常の画面更新を軽く保つ。
         if (!total.equals(aqe$displayTotal)
-                || !used.equals(aqe$displayUsed)
+                || !reserved.equals(aqe$displayUsed)
                 || activeJobs != aqe$displayActiveJobs
                 || bigJobs != aqe$displayBigJobs) {
             aqe$displaySnapshot = BigIntegerCapacitySnapshot.capture(
                     total, used, available, activeJobs, bigJobs);
             aqe$displayTotal = total;
-            aqe$displayUsed = used;
+            // 比較用にはBackendの生予約値を保持し、同じ破損値で毎画面再変換しない。
+            aqe$displayUsed = reserved;
             aqe$displayActiveJobs = activeJobs;
             aqe$displayBigJobs = bigJobs;
         }
