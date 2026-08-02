@@ -14,6 +14,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.pedroksl.advanced_ae.common.cluster.AdvCraftingCPU;
@@ -112,7 +113,10 @@ public abstract class AdvCraftingCPUClusterMixin implements AQEBigIntegerCpuAcce
     }
 
     @Inject(method = "writeToNBT", at = @At("RETURN"))
-    private void advancedQuantumEngineering$saveBigIntegerHost(CompoundTag data, CallbackInfo ci) {
+    private void advancedQuantumEngineering$saveBigIntegerHost(
+            CompoundTag data,
+            HolderLookup.Provider registries,
+            CallbackInfo ci) {
         AQEBigCraftingHost host = aqe$bigHost;
         if (host != null && host.hasPersistentState()) {
             data.put(AQE_BIG_HOST_NBT, host.save());
@@ -120,7 +124,10 @@ public abstract class AdvCraftingCPUClusterMixin implements AQEBigIntegerCpuAcce
     }
 
     @Inject(method = "readFromNBT", at = @At("RETURN"))
-    private void advancedQuantumEngineering$loadBigIntegerHost(CompoundTag data, CallbackInfo ci) {
+    private void advancedQuantumEngineering$loadBigIntegerHost(
+            CompoundTag data,
+            HolderLookup.Provider registries,
+            CallbackInfo ci) {
         CompoundTag saved = data.contains(AQE_BIG_HOST_NBT, Tag.TAG_COMPOUND)
                 ? data.getCompound(AQE_BIG_HOST_NBT).copy()
                 : new CompoundTag();

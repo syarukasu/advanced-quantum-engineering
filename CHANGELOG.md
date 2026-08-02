@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+## 2.3.0 - 2026-08-02
+
+### Added
+
+- Added the NeoForge 1.21.1 release line using Java 21.
+- Added pinned support for AE2 19.2.17, Advanced AE 1.6.11-1.21.1, and
+  AE2 Omni Cells 1.1.6.
+
+### Changed
+
+- Migrated the production build and resource layout to NeoForge 21.1.247.
+- Updated the optional BigInteger host integration range to ACO 1.6.x.
+- Kept AQE 2.2.x and its release artifacts as the Forge 1.20.1 line.
+
 ## 2.2.2 - 2026-07-29
 
 ### Fixed

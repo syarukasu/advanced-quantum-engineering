@@ -8,9 +8,9 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.level.storage.LevelResource;
-import net.minecraftforge.common.ForgeConfigSpec;
-import net.minecraftforge.fml.ModLoadingContext;
-import net.minecraftforge.fml.config.ModConfig;
+import net.neoforged.fml.ModContainer;
+import net.neoforged.fml.config.ModConfig;
+import net.neoforged.neoforge.common.ModConfigSpec;
 
 public final class AQEConfig {
     public static final String CONFIG_FILE_NAME = "advanced_quantum_engineering.toml";
@@ -51,25 +51,25 @@ public final class AQEConfig {
     public static final int DEFAULT_BIG_INTEGER_DECIMAL_DIGITS = 1_024;
     public static final int DEFAULT_BIG_INTEGER_CORE_COPROCESSORS = MAX_SAFE_EFFECTIVE_COPROCESSORS;
 
-    private static final ForgeConfigSpec SPEC;
-    private static final ForgeConfigSpec.LongValue CORE_STORAGE;
-    private static final ForgeConfigSpec.LongValue STORAGE_BLOCK_BYTES;
-    private static final ForgeConfigSpec.IntValue BASE_COPROCESSORS;
-    private static final ForgeConfigSpec.IntValue ACCELERATOR_THREADS;
-    private static final ForgeConfigSpec.IntValue MULTI_THREADER_MULTIPLIER;
-    private static final ForgeConfigSpec.IntValue DATA_ENTANGLER_MULTIPLIER;
-    private static final ForgeConfigSpec.LongValue EXPERIMENTAL_CORE_STORAGE;
-    private static final ForgeConfigSpec.IntValue EXPERIMENTAL_CORE_COPROCESSORS;
-    private static final ForgeConfigSpec.IntValue BIG_INTEGER_CORE_DECIMAL_DIGITS;
-    private static final ForgeConfigSpec.IntValue BIG_INTEGER_CORE_COPROCESSORS;
-    private static final ForgeConfigSpec.BooleanValue FAIL_FAST_ON_INTEGRATION_MISMATCH;
-    private static final ForgeConfigSpec.BooleanValue WARN_ON_EXTREME_CONFIG_VALUES;
-    private static final ForgeConfigSpec.IntValue DIAGNOSTIC_MODIFIED_ACCELERATOR_COUNT;
+    private static final ModConfigSpec SPEC;
+    private static final ModConfigSpec.LongValue CORE_STORAGE;
+    private static final ModConfigSpec.LongValue STORAGE_BLOCK_BYTES;
+    private static final ModConfigSpec.IntValue BASE_COPROCESSORS;
+    private static final ModConfigSpec.IntValue ACCELERATOR_THREADS;
+    private static final ModConfigSpec.IntValue MULTI_THREADER_MULTIPLIER;
+    private static final ModConfigSpec.IntValue DATA_ENTANGLER_MULTIPLIER;
+    private static final ModConfigSpec.LongValue EXPERIMENTAL_CORE_STORAGE;
+    private static final ModConfigSpec.IntValue EXPERIMENTAL_CORE_COPROCESSORS;
+    private static final ModConfigSpec.IntValue BIG_INTEGER_CORE_DECIMAL_DIGITS;
+    private static final ModConfigSpec.IntValue BIG_INTEGER_CORE_COPROCESSORS;
+    private static final ModConfigSpec.BooleanValue FAIL_FAST_ON_INTEGRATION_MISMATCH;
+    private static final ModConfigSpec.BooleanValue WARN_ON_EXTREME_CONFIG_VALUES;
+    private static final ModConfigSpec.IntValue DIAGNOSTIC_MODIFIED_ACCELERATOR_COUNT;
     private static volatile int cachedBigIntegerDigits = -1;
     private static volatile BigInteger cachedBigIntegerStorage = BigInteger.ZERO;
 
     static {
-        ForgeConfigSpec.Builder builder = new ForgeConfigSpec.Builder();
+        ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
         builder.comment("通常量子コンピュータの性能設定 / Standard Quantum Computer tuning")
                 .push("quantum_computer");
         CORE_STORAGE = builder
@@ -137,8 +137,8 @@ public final class AQEConfig {
     private AQEConfig() {
     }
 
-    public static void register() {
-        ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, SPEC, CONFIG_FILE_NAME);
+    public static void register(ModContainer container) {
+        container.registerConfig(ModConfig.Type.COMMON, SPEC, CONFIG_FILE_NAME);
     }
 
     public static boolean migrateLegacyServerConfig(MinecraftServer server) {
@@ -181,21 +181,21 @@ public final class AQEConfig {
         }
     }
 
-    private static void migrateLong(CommentedFileConfig legacy, String path, ForgeConfigSpec.LongValue target) {
+    private static void migrateLong(CommentedFileConfig legacy, String path, ModConfigSpec.LongValue target) {
         Object value = legacy.get(path);
         if (value instanceof Number number) {
             target.set(number.longValue());
         }
     }
 
-    private static void migrateInt(CommentedFileConfig legacy, String path, ForgeConfigSpec.IntValue target) {
+    private static void migrateInt(CommentedFileConfig legacy, String path, ModConfigSpec.IntValue target) {
         Object value = legacy.get(path);
         if (value instanceof Number number) {
             target.set(number.intValue());
         }
     }
 
-    private static void migrateBoolean(CommentedFileConfig legacy, String path, ForgeConfigSpec.BooleanValue target) {
+    private static void migrateBoolean(CommentedFileConfig legacy, String path, ModConfigSpec.BooleanValue target) {
         Object value = legacy.get(path);
         if (value instanceof Boolean booleanValue) {
             target.set(booleanValue);

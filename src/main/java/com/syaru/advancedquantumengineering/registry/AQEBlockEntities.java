@@ -9,52 +9,52 @@ import com.syaru.advancedquantumengineering.blockentity.ModifiedQuantumCoreBlock
 import com.syaru.advancedquantumengineering.blockentity.ModifiedQuantumMultiThreaderBlockEntity;
 import com.syaru.advancedquantumengineering.blockentity.ModifiedQuantumStorageBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
-import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.registries.DeferredRegister;
-import net.minecraftforge.registries.ForgeRegistries;
-import net.minecraftforge.registries.RegistryObject;
+import net.minecraft.core.registries.Registries;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.registries.DeferredHolder;
+import net.neoforged.neoforge.registries.DeferredRegister;
 
 public final class AQEBlockEntities {
     private static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITIES =
-            DeferredRegister.create(ForgeRegistries.BLOCK_ENTITY_TYPES, AdvancedQuantumEngineering.MODID);
+            DeferredRegister.create(Registries.BLOCK_ENTITY_TYPE, AdvancedQuantumEngineering.MODID);
 
-    public static final RegistryObject<BlockEntityType<ModifiedQuantumCoreBlockEntity>> MODIFIED_QUANTUM_CORE =
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<ModifiedQuantumCoreBlockEntity>> MODIFIED_QUANTUM_CORE =
             BLOCK_ENTITIES.register("modified_quantum_core",
                     () -> BlockEntityType.Builder.of(
                             ModifiedQuantumCoreBlockEntity::new,
                             AQEBlocks.MODIFIED_QUANTUM_CORE.get()
                     ).build(null));
-    public static final RegistryObject<BlockEntityType<ModifiedQuantumStorageBlockEntity>> MODIFIED_QUANTUM_STORAGE =
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<ModifiedQuantumStorageBlockEntity>> MODIFIED_QUANTUM_STORAGE =
             BLOCK_ENTITIES.register("modified_quantum_storage",
                     () -> BlockEntityType.Builder.of(
                             ModifiedQuantumStorageBlockEntity::new,
                             AQEBlocks.MODIFIED_QUANTUM_STORAGE.get()
                     ).build(null));
-    public static final RegistryObject<BlockEntityType<ModifiedQuantumAcceleratorBlockEntity>> MODIFIED_QUANTUM_ACCELERATOR =
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<ModifiedQuantumAcceleratorBlockEntity>> MODIFIED_QUANTUM_ACCELERATOR =
             BLOCK_ENTITIES.register("modified_quantum_accelerator",
                     () -> BlockEntityType.Builder.of(
                             ModifiedQuantumAcceleratorBlockEntity::new,
                             AQEBlocks.MODIFIED_QUANTUM_ACCELERATOR.get()
                     ).build(null));
-    public static final RegistryObject<BlockEntityType<ModifiedQuantumMultiThreaderBlockEntity>> MODIFIED_QUANTUM_MULTI_THREADER =
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<ModifiedQuantumMultiThreaderBlockEntity>> MODIFIED_QUANTUM_MULTI_THREADER =
             BLOCK_ENTITIES.register("modified_quantum_multi_threader",
                     () -> BlockEntityType.Builder.of(
                             ModifiedQuantumMultiThreaderBlockEntity::new,
                             AQEBlocks.MODIFIED_QUANTUM_MULTI_THREADER.get()
                     ).build(null));
-    public static final RegistryObject<BlockEntityType<ModifiedDataEntanglerBlockEntity>> MODIFIED_DATA_ENTANGLER =
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<ModifiedDataEntanglerBlockEntity>> MODIFIED_DATA_ENTANGLER =
             BLOCK_ENTITIES.register("modified_data_entangler",
                     () -> BlockEntityType.Builder.of(
                             ModifiedDataEntanglerBlockEntity::new,
                             AQEBlocks.MODIFIED_DATA_ENTANGLER.get()
                     ).build(null));
-    public static final RegistryObject<BlockEntityType<ExperimentalQuantumCoreBlockEntity>> EXPERIMENTAL_QUANTUM_CORE =
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<ExperimentalQuantumCoreBlockEntity>> EXPERIMENTAL_QUANTUM_CORE =
             BLOCK_ENTITIES.register("experimental_quantum_core",
                     () -> BlockEntityType.Builder.of(
                             ExperimentalQuantumCoreBlockEntity::new,
                             AQEBlocks.EXPERIMENTAL_QUANTUM_CORE.get()
                     ).build(null));
-    public static final RegistryObject<BlockEntityType<BigIntegerQuantumCoreBlockEntity>> BIG_INTEGER_QUANTUM_CORE =
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<BigIntegerQuantumCoreBlockEntity>> BIG_INTEGER_QUANTUM_CORE =
             BLOCK_ENTITIES.register("big_integer_quantum_core",
                     () -> BlockEntityType.Builder.of(
                             BigIntegerQuantumCoreBlockEntity::new,

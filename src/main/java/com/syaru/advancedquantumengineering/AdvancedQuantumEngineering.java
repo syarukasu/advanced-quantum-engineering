@@ -10,13 +10,13 @@ import com.syaru.advancedquantumengineering.registry.AQEBlockEntities;
 import com.syaru.advancedquantumengineering.registry.AQEBlocks;
 import com.syaru.advancedquantumengineering.registry.AQECreativeTabs;
 import com.syaru.advancedquantumengineering.registry.AQEItems;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.server.ServerStartedEvent;
-import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.fml.ModList;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.ModContainer;
+import net.neoforged.fml.ModList;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.server.ServerStartedEvent;
 import org.slf4j.Logger;
 
 @Mod(AdvancedQuantumEngineering.MODID)
@@ -25,17 +25,15 @@ public final class AdvancedQuantumEngineering {
     public static final String MOD_NAME = "Advanced Quantum Engineering";
     public static final Logger LOGGER = LogUtils.getLogger();
 
-    public AdvancedQuantumEngineering() {
-        IEventBus modBus = FMLJavaModLoadingContext.get().getModEventBus();
-
-        AQEConfig.register();
+    public AdvancedQuantumEngineering(IEventBus modBus, ModContainer container) {
+        AQEConfig.register(container);
         AQEBlocks.register(modBus);
         AQEItems.register(modBus);
         AQEBlockEntities.register(modBus);
         AQECreativeTabs.register(modBus);
 
         modBus.addListener(this::commonSetup);
-        MinecraftForge.EVENT_BUS.addListener(this::onServerStarted);
+        NeoForge.EVENT_BUS.addListener(this::onServerStarted);
     }
 
     private void commonSetup(FMLCommonSetupEvent event) {
