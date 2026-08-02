@@ -9,28 +9,28 @@ import com.syaru.advancedquantumengineering.block.ModifiedQuantumCoreBlock;
 import com.syaru.advancedquantumengineering.block.ModifiedQuantumMultiThreaderBlock;
 import com.syaru.advancedquantumengineering.block.ModifiedQuantumStorageBlock;
 import net.minecraft.world.level.block.Block;
-import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.registries.DeferredRegister;
-import net.minecraftforge.registries.ForgeRegistries;
-import net.minecraftforge.registries.RegistryObject;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.registries.DeferredHolder;
+import net.neoforged.neoforge.registries.DeferredRegister;
+import net.minecraft.core.registries.Registries;
 
 public final class AQEBlocks {
     private static final DeferredRegister<Block> BLOCKS =
-            DeferredRegister.create(ForgeRegistries.BLOCKS, AdvancedQuantumEngineering.MODID);
+            DeferredRegister.create(Registries.BLOCK, AdvancedQuantumEngineering.MODID);
 
-    public static final RegistryObject<ModifiedQuantumCoreBlock> MODIFIED_QUANTUM_CORE =
+    public static final DeferredHolder<Block, ModifiedQuantumCoreBlock> MODIFIED_QUANTUM_CORE =
             BLOCKS.register("modified_quantum_core", ModifiedQuantumCoreBlock::new);
-    public static final RegistryObject<ModifiedQuantumStorageBlock> MODIFIED_QUANTUM_STORAGE =
+    public static final DeferredHolder<Block, ModifiedQuantumStorageBlock> MODIFIED_QUANTUM_STORAGE =
             BLOCKS.register("modified_quantum_storage", ModifiedQuantumStorageBlock::new);
-    public static final RegistryObject<ModifiedQuantumAcceleratorBlock> MODIFIED_QUANTUM_ACCELERATOR =
+    public static final DeferredHolder<Block, ModifiedQuantumAcceleratorBlock> MODIFIED_QUANTUM_ACCELERATOR =
             BLOCKS.register("modified_quantum_accelerator", ModifiedQuantumAcceleratorBlock::new);
-    public static final RegistryObject<ModifiedQuantumMultiThreaderBlock> MODIFIED_QUANTUM_MULTI_THREADER =
+    public static final DeferredHolder<Block, ModifiedQuantumMultiThreaderBlock> MODIFIED_QUANTUM_MULTI_THREADER =
             BLOCKS.register("modified_quantum_multi_threader", ModifiedQuantumMultiThreaderBlock::new);
-    public static final RegistryObject<ModifiedDataEntanglerBlock> MODIFIED_DATA_ENTANGLER =
+    public static final DeferredHolder<Block, ModifiedDataEntanglerBlock> MODIFIED_DATA_ENTANGLER =
             BLOCKS.register("modified_data_entangler", ModifiedDataEntanglerBlock::new);
-    public static final RegistryObject<ExperimentalQuantumCoreBlock> EXPERIMENTAL_QUANTUM_CORE =
+    public static final DeferredHolder<Block, ExperimentalQuantumCoreBlock> EXPERIMENTAL_QUANTUM_CORE =
             BLOCKS.register("experimental_quantum_core", ExperimentalQuantumCoreBlock::new);
-    public static final RegistryObject<BigIntegerQuantumCoreBlock> BIG_INTEGER_QUANTUM_CORE =
+    public static final DeferredHolder<Block, BigIntegerQuantumCoreBlock> BIG_INTEGER_QUANTUM_CORE =
             BLOCKS.register("big_integer_quantum_core", BigIntegerQuantumCoreBlock::new);
 
     private AQEBlocks() {

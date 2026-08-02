@@ -1,5 +1,6 @@
 plugins {
-    id 'net.minecraftforge.gradle' version '6.0.54'
+    id 'java-library'
+    id 'net.neoforged.moddev' version '2.0.143'
 }
 
 group = mod_group
@@ -10,127 +11,98 @@ base {
 }
 
 java {
-    toolchain.languageVersion = JavaLanguageVersion.of(17)
+    toolchain.languageVersion = JavaLanguageVersion.of(21)
 }
-
-minecraft {
-    mappings channel: 'official', version: '1.20.1'
-
-    runs {
-        client {
-            workingDirectory project.file('run')
-            property 'forge.logging.markers', 'REGISTRIES'
-            property 'forge.logging.console.level', 'info'
-            mods {
-                advanced_quantum_engineering {
-                    source sourceSets.main
-                }
-            }
-        }
-        server {
-            workingDirectory project.file('run-server')
-            property 'forge.logging.markers', 'REGISTRIES'
-            property 'forge.logging.console.level', 'info'
-            args '--nogui'
-            mods {
-                advanced_quantum_engineering {
-                    source sourceSets.main
-                }
-            }
-        }
-    }
-}
-
-def minecraftInstance = file('../../')
 
 repositories {
     mavenCentral()
-    maven {
-        name = 'ModMaven'
-        url = 'https://modmaven.dev/'
-        content {
-            includeGroup 'appeng'
+}
+
+neoForge {
+    version = neo_version
+
+    parchment {
+        minecraftVersion = parchment_minecraft_version
+        mappingsVersion = parchment_mappings_version
+    }
+
+    runs {
+        client {
+            client()
+            gameDirectory = file('run')
+        }
+        server {
+            server()
+            gameDirectory = file('run-server')
+            programArgument '--nogui'
+        }
+        configureEach {
+            logLevel = org.slf4j.event.Level.INFO
         }
     }
-    maven {
-        name = 'CurseMaven'
-        url = 'https://www.cursemaven.com'
-        content {
-            includeGroup 'curse.maven'
+
+    mods {
+        advanced_quantum_engineering {
+            sourceSet(sourceSets.main)
         }
     }
-    flatDir {
-        dirs "${minecraftInstance}/mods"
-    }
+
+    addModdingDependenciesTo sourceSets.test
 }
 
 dependencies {
-    minecraft 'net.minecraftforge:forge:1.20.1-47.4.18'
-
-    def localModsDir = file(findProperty('aqeLocalModsDir') ?: "${minecraftInstance}/mods")
-    def localAe2 = new File(localModsDir, 'appliedenergistics2-forge-15.4.10.jar')
-    def localAdvancedAe = new File(localModsDir, 'AdvancedAE-1.3.5-1.20.1.jar')
-    def localOmniCells = new File(localModsDir, 'ae2omnicells-1.20.1-forge-1.1.6.jar')
-    def localAddonLib = new File(localModsDir, 'AE2AddonLib-1.0.4-1.20.1.jar')
-
-    if (localAe2.isFile() && localAdvancedAe.isFile()
-            && localOmniCells.isFile() && localAddonLib.isFile()) {
-        implementation fg.deobf(group: 'local.mods', name: 'appliedenergistics2-forge', version: '15.4.10')
-        implementation fg.deobf(group: 'local.mods', name: 'AdvancedAE', version: '1.3.5-1.20.1')
-        implementation fg.deobf(group: 'local.mods', name: 'ae2omnicells-1.20.1-forge', version: '1.1.6')
-        implementation fg.deobf(group: 'local.mods', name: 'AE2AddonLib', version: '1.0.4-1.20.1')
-    } else {
-        implementation fg.deobf('appeng:appliedenergistics2-forge:15.4.10')
-
-        def advancedAeDependency = project.dependencies.create('curse.maven:advancedae-1084104:7939754') {
-            transitive = false
+    def localModsDir = file(findProperty('aqeLocalModsDir') ?: '../../mods')
+    def requiredMod = { String fileName ->
+        File dependency = new File(localModsDir, fileName)
+        if (!dependency.isFile()) {
+            throw new GradleException("Required 1.21.1 dependency is missing: ${dependency}")
         }
-        def omniCellsDependency = project.dependencies.create('curse.maven:omni-cells-1359517:8050975') {
-            transitive = false
-        }
-        def addonLibDependency = project.dependencies.create('curse.maven:ae2addonlib-1366135:7668681') {
-            transitive = false
-        }
-
-        implementation fg.deobf(advancedAeDependency)
-        implementation fg.deobf(omniCellsDependency)
-        implementation fg.deobf(addonLibDependency)
+        dependency
     }
 
-    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
+    implementation files(requiredMod('appliedenergistics2-19.2.17.jar'))
+    implementation files(requiredMod('guideme-21.1.17.jar'))
+    implementation files(requiredMod('AdvancedAE-1.6.11-1.21.1.jar'))
+    implementation files(requiredMod('ae2omnicells-1.21.1-neoforge-1.1.6.jar'))
 
-    testImplementation platform('org.junit:junit-bom:5.10.3')
+    def acoJar = file('../ae2-crafting-optimizer/build/libs/ae2-crafting-optimizer-1.6.0.jar')
+    if (acoJar.isFile()) {
+        compileOnly files(acoJar)
+    }
+
+    annotationProcessor 'org.spongepowered:mixin:0.8.7:processor'
+
+    testImplementation platform('org.junit:junit-bom:5.11.4')
     testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
 }
 
-test {
+tasks.named('test', Test).configure {
     useJUnitPlatform()
 }
 
 processResources {
     inputs.property 'version', project.version
-    filesMatching('META-INF/mods.toml') {
+    filesMatching('META-INF/neoforge.mods.toml') {
         expand 'file': ['jarVersion': project.version]
     }
 }
 
 jar {
-    // 配布JAR内のMinecraft参照を、本番環境で使われる難読化名へ必ず変換する。
-    finalizedBy 'reobfJar'
     manifest {
         attributes([
-            'Specification-Title': mod_id,
-            'Specification-Vendor': 'syaru',
-            'Specification-Version': '1',
-            'Implementation-Title': project.name,
-            'Implementation-Version': project.version,
-            'Implementation-Vendor': 'syaru',
-            'Implementation-License': 'LGPL-3.0-only',
-            'MixinConfigs': 'advanced_quantum_engineering.mixins.json'
+                'Specification-Title'    : mod_id,
+                'Specification-Vendor'   : 'syaru',
+                'Specification-Version'  : '1',
+                'Implementation-Title'   : project.name,
+                'Implementation-Version' : project.version,
+                'Implementation-Vendor'  : 'syaru',
+                'Implementation-License' : 'LGPL-3.0-only',
+                'MixinConfigs'            : 'advanced_quantum_engineering.mixins.json'
         ])
     }
 }

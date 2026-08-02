@@ -9,9 +9,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Rarity;
 import net.minecraft.world.item.TooltipFlag;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
-import org.jetbrains.annotations.Nullable;
 
 public class ExperimentalQuantumCoreItem extends BlockItem {
     public ExperimentalQuantumCoreItem(Block block) {
@@ -24,7 +22,8 @@ public class ExperimentalQuantumCoreItem extends BlockItem {
     }
 
     @Override
-    public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tooltip, TooltipFlag flag) {
+    public void appendHoverText(
+            ItemStack stack, Item.TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
         tooltip.add(Component.translatable(
                 "tooltip.advanced_quantum_engineering.experimental_quantum_core.storage",
                 formatBytes(AQEConfig.getExperimentalCoreStorage())

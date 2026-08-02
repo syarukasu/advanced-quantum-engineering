@@ -6,14 +6,15 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.pedroksl.advanced_ae.common.blocks.AAEAbstractCraftingUnitBlock;
-import net.pedroksl.advanced_ae.common.blocks.AAECraftingUnitBlock;
 import net.pedroksl.advanced_ae.common.blocks.AAECraftingUnitType;
 import org.jetbrains.annotations.Nullable;
 
 public final class BigIntegerQuantumCoreBlock
         extends AAEAbstractCraftingUnitBlock<BigIntegerQuantumCoreBlockEntity> {
     public BigIntegerQuantumCoreBlock() {
-        super(AAECraftingUnitBlock.getProps(AAECraftingUnitType.QUANTUM_CORE, false),
+        super(metalProps()
+                        .lightLevel(state -> state.getValue(LIGHT_LEVEL))
+                        .noOcclusion(),
                 AAECraftingUnitType.QUANTUM_CORE);
     }
 

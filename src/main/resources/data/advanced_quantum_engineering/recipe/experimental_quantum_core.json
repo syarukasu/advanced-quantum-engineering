@@ -9,6 +9,6 @@
     "S": { "item": "advanced_quantum_engineering:modified_quantum_storage" }
   },
   "pattern": ["SAS", "OCO", "SES"],
-  "result": { "item": "advanced_quantum_engineering:experimental_quantum_core" },
+  "result": { "id": "advanced_quantum_engineering:experimental_quantum_core" },
   "show_notification": true
 }

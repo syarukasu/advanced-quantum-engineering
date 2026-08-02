@@ -8,6 +8,6 @@
     "P": { "item": "advanced_ae:quantum_processor" }
   },
   "pattern": ["OAO", "PMP", "OAO"],
-  "result": { "item": "advanced_quantum_engineering:modified_quantum_multi_threader" },
+  "result": { "id": "advanced_quantum_engineering:modified_quantum_multi_threader" },
   "show_notification": true
 }

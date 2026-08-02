@@ -8,7 +8,7 @@ import net.pedroksl.advanced_ae.common.blocks.AAECraftingUnitType;
 import net.pedroksl.advanced_ae.common.blocks.AAEAbstractCraftingUnitBlock;
 import net.pedroksl.advanced_ae.common.cluster.AdvCraftingCPUCluster;
 import net.pedroksl.advanced_ae.common.entities.AdvCraftingBlockEntity;
-import net.minecraftforge.fml.ModList;
+import net.neoforged.fml.ModList;
 
 import java.lang.reflect.Method;
 
