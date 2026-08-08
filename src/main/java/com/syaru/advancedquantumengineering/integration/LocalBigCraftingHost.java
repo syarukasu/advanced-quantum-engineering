@@ -66,6 +66,22 @@ final class LocalBigCraftingHost implements AQEBigCraftingHost {
     }
 
     @Override
+    public synchronized AQEHostSnapshot snapshot(long revision) {
+        BigInteger total = physicalCapacity;
+        BigInteger used = reserved();
+        return new AQEHostSnapshot(
+                revision,
+                total,
+                used,
+                available(),
+                0L,
+                0L,
+                0L,
+                used.compareTo(total) > 0,
+                backendId());
+    }
+
+    @Override
     public String backendId() {
         return deferredState == null ? "aqe:long_fallback" : "aqe:paused_optional_backend";
     }
