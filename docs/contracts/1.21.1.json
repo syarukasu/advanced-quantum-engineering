@@ -1,0 +1,49 @@
+{
+  "minecraft": "1.21.1",
+  "loader": "NeoForge",
+  "java": 21,
+  "dependencies": {
+    "ae2": "19.2.17",
+    "advanced_ae": "1.6.11",
+    "ae2omnicells": "1.1.6",
+    "aco_api": 3
+  },
+  "mixin_targets": {
+    "cluster": "net.pedroksl.advanced_ae.common.cluster.AdvCraftingCPUCluster",
+    "block_entity": "net.pedroksl.advanced_ae.common.entities.AdvCraftingBlockEntity",
+    "tooltip": "appeng.core.localization.Tooltips",
+    "advanced_cpu_list": "net.pedroksl.advanced_ae.gui.quantumcomputer.AdvCpuSelectionList",
+    "ae2_cpu_list": "appeng.client.gui.widgets.CPUSelectionList"
+  },
+  "cluster_methods": {
+    "addBlockEntity": "(Lnet/pedroksl/advanced_ae/common/entities/AdvCraftingBlockEntity;)V",
+    "recalculateRemainingStorage": "()V",
+    "getCoProcessors": "()I",
+    "destroy": "()V",
+    "breakCluster": "()V",
+    "getLevel": "()Lnet/minecraft/world/level/Level;",
+    "writeToNBT": "(Lnet/minecraft/nbt/CompoundTag;Lnet/minecraft/core/HolderLookup$Provider;)V",
+    "readFromNBT": "(Lnet/minecraft/nbt/CompoundTag;Lnet/minecraft/core/HolderLookup$Provider;)V"
+  },
+  "cluster_fields": {
+    "accelerator": "I",
+    "acceleratorMultiplier": "I",
+    "storage": "J",
+    "storageMultiplier": "J",
+    "remainingStorage": "J",
+    "activeCpus": "Ljava/util/HashMap;",
+    "blockEntities": "Ljava/util/List;"
+  },
+  "constant_contracts": {
+    "addBlockEntity.single_unit_thread_guard": {
+      "value": 16,
+      "match_count": 1
+    }
+  },
+  "client_methods": {
+    "appeng.core.localization.Tooltips.getByteAmount": "(J)Lappeng/core/localization/Tooltips$Amount;",
+    "advanced_ae.gui.quantumcomputer.AdvCpuSelectionList.formatStorage": "(Lnet/pedroksl/advanced_ae/gui/quantumcomputer/QuantumComputerMenu$CraftingCpuListEntry;)Ljava/lang/String;",
+    "ae2.client.gui.widgets.CPUSelectionList.formatStorage": "(Lappeng/menu/me/crafting/CraftingStatusMenu$CraftingCpuListEntry;)Ljava/lang/String;"
+  },
+  "fail_fast": true
+}

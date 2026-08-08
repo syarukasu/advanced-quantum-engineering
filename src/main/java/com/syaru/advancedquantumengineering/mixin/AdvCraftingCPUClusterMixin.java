@@ -147,12 +147,12 @@ public abstract class AdvCraftingCPUClusterMixin implements AQEBigIntegerCpuAcce
         advancedQuantumEngineering$recalculateStorageState();
     }
 
-    @Inject(method = "destroy", at = @At("HEAD"), require = 0)
+    @Inject(method = "destroy", at = @At("HEAD"))
     private void advancedQuantumEngineering$closeHostOnDestroy(CallbackInfo ci) {
         advancedQuantumEngineering$closeHost();
     }
 
-    @Inject(method = "breakCluster", at = @At("HEAD"), require = 0)
+    @Inject(method = "breakCluster", at = @At("HEAD"))
     private void advancedQuantumEngineering$closeHostOnBreak(CallbackInfo ci) {
         advancedQuantumEngineering$closeHost();
     }
