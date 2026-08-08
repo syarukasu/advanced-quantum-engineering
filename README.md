@@ -172,7 +172,7 @@ Run:
 gradlew.bat clean build --no-daemon
 ```
 
-The generated jar is written under `build/libs/aqe2.3.2_1.21.1.jar`.
+The generated jar is written under `build/libs/aqe2.2.3_1.21.1.jar`.
 
 When cloning outside the Prism instance, pass `-PaqeLocalModsDir=<directory>` containing the pinned dependency JARs.
 
