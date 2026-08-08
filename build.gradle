@@ -46,6 +46,7 @@ minecraft {
 }
 
 def minecraftInstance = file('../../')
+def localModsDir = file(findProperty('aqeLocalModsDir') ?: "${minecraftInstance}/mods")
 
 repositories {
     mavenCentral()
@@ -64,14 +65,13 @@ repositories {
         }
     }
     flatDir {
-        dirs "${minecraftInstance}/mods"
+        dirs localModsDir
     }
 }
 
 dependencies {
     minecraft 'net.minecraftforge:forge:1.20.1-47.4.18'
 
-    def localModsDir = file(findProperty('aqeLocalModsDir') ?: "${minecraftInstance}/mods")
     def localAe2 = new File(localModsDir, 'appliedenergistics2-forge-15.4.10.jar')
     def localAdvancedAe = new File(localModsDir, 'AdvancedAE-1.3.5-1.20.1.jar')
     def localOmniCells = new File(localModsDir, 'ae2omnicells-1.20.1-forge-1.1.6.jar')
@@ -137,4 +137,27 @@ jar {
             'MixinConfigs': 'advanced_quantum_engineering.mixins.json'
         ])
     }
+}
+
+tasks.register('normalizeReobfJarName') {
+    dependsOn 'reobfJar'
+    doLast {
+        def expected = file("$buildDir/libs/aqe${mod_version}_${minecraft_version}.jar")
+        def sources = fileTree("$buildDir/libs").matching {
+            include "aqe${mod_version}_${minecraft_version}-*.jar"
+        }.files
+        def source = sources.find { it.name != expected.name }
+        if (source != null && source.exists()) {
+            if (!source.renameTo(expected)) {
+                throw new GradleException("Could not normalize ${source.name} to ${expected.name}")
+            }
+        }
+        if (!expected.isFile()) {
+            throw new GradleException("Expected distribution JAR was not produced: ${expected}")
+        }
+    }
+}
+
+tasks.named('build') {
+    finalizedBy 'normalizeReobfJarName'
 }
