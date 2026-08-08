@@ -2,9 +2,13 @@
 
 Advanced Quantum Engineering 2.3.0 adds upgraded Advanced AE Quantum Computer parts that use the original Quantum Computer multiblock system.
 
-This release targets Minecraft 1.21.1, NeoForge 21.1.247+, Java 21, Applied Energistics 2 19.2.17, Advanced AE 1.6.11-1.21.1, and AE2 Omni Cells 1.1.6. AQE 2.2.x remains the Forge 1.20.1 release line.
+This release targets Minecraft 1.21.1, NeoForge 21.1.247+, Java 21, Applied Energistics 2 19.2.17, Advanced AE 1.6.11-1.21.1, and AE2 Omni Cells 1.1.6. The persistent branch is `mc/1.21.1`, and its artifact is named `aqe<version>_1.21.1.jar`. AQE 2.2.x remains the independent Forge 1.20.1 line on `mc/1.20.1`, with artifacts named `aqe<version>_1.20.1.jar`.
 
 AE2 crafting and synchronization optimization code is intentionally not part of this mod. It lives in the separate `ae2-crafting-optimizer` project so Quantum Computer block behavior and AE2 optimization behavior can be tested independently. Compatible ACO 1.6.x releases are optional: AQE runs without ACO and uses its versioned BigInteger host API when it is present and enabled.
+
+The optional ACO compile contract is supplied explicitly with
+`-PacoJar=/absolute/path/to/aco<version>_<mc>.jar`; AQE never inspects a fixed
+sibling build directory or a historical ACO filename.
 
 ## Blocks
 
