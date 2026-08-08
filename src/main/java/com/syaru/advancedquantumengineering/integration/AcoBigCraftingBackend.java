@@ -30,6 +30,7 @@ public final class AcoBigCraftingBackend implements AQEBigCraftingBackend {
     private final Method loadHost;
     private final Method register;
     private final Method unregister;
+    private final Method registrationClose;
     private final RuntimeMethods runtimeMethods;
 
     public AcoBigCraftingBackend() throws ReflectiveOperationException {
@@ -60,6 +61,11 @@ public final class AcoBigCraftingBackend implements AQEBigCraftingBackend {
                 "loadHost", CompoundTag.class, BigInteger.class, keyCodecType);
         this.register = registryType.getMethod("register", Object.class, hostType);
         this.unregister = registryType.getMethod("unregister", Object.class);
+        Class<?> registrationType = Class.forName(
+                "com.syaru.ae2craftingoptimizer.api.big.BigCraftingHostRegistration",
+                false,
+                loader);
+        this.registrationClose = registrationType.getMethod("close");
         this.runtimeMethods = new RuntimeMethods(hostType);
     }
 
@@ -105,8 +111,8 @@ public final class AcoBigCraftingBackend implements AQEBigCraftingBackend {
         } else {
             runtime = invoke(createHost, null, physicalCapacity, keyCodec);
         }
-        invoke(register, null, owner, runtime);
-        return new Host(owner, runtime, unregister, runtimeMethods);
+        Object registration = invoke(register, null, owner, runtime);
+        return new Host(owner, runtime, registration, registrationClose, unregister, runtimeMethods);
     }
 
     private static Object invoke(Method method, Object target, Object... arguments) {
@@ -164,13 +170,23 @@ public final class AcoBigCraftingBackend implements AQEBigCraftingBackend {
     private static final class Host implements AQEBigCraftingHost {
         private final Object owner;
         private final Object runtime;
+        private final Object registration;
+        private final Method registrationClose;
         private final Method unregister;
         private final RuntimeMethods methods;
         private boolean closed;
 
-        private Host(Object owner, Object runtime, Method unregister, RuntimeMethods methods) {
+        private Host(
+                Object owner,
+                Object runtime,
+                Object registration,
+                Method registrationClose,
+                Method unregister,
+                RuntimeMethods methods) {
             this.owner = owner;
             this.runtime = runtime;
+            this.registration = registration;
+            this.registrationClose = registrationClose;
             this.unregister = unregister;
             this.methods = methods;
         }
@@ -250,7 +266,12 @@ public final class AcoBigCraftingBackend implements AQEBigCraftingBackend {
         @Override
         public synchronized void close() {
             if (!closed) {
-                invoke(unregister, null, owner);
+                if (registration != null) {
+                    invoke(registrationClose, registration);
+                } else {
+                    // Compatibility with an older API that returned void from register.
+                    invoke(unregister, null, owner);
+                }
                 closed = true;
             }
         }

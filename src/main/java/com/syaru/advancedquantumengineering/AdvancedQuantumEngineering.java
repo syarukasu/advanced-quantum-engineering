@@ -5,6 +5,7 @@ import com.syaru.advancedquantumengineering.config.AQEConfig;
 import com.syaru.advancedquantumengineering.integration.AdvancedAEIntegration;
 import com.syaru.advancedquantumengineering.integration.AQEDiagnostics;
 import com.syaru.advancedquantumengineering.integration.BigCraftingIntegration;
+import com.syaru.advancedquantumengineering.integration.AQEHostLifecycleEvents;
 import com.syaru.advancedquantumengineering.integration.OmniCellsIntegration;
 import com.syaru.advancedquantumengineering.registry.AQEBlockEntities;
 import com.syaru.advancedquantumengineering.registry.AQEBlocks;
@@ -36,6 +37,8 @@ public final class AdvancedQuantumEngineering {
 
         modBus.addListener(this::commonSetup);
         MinecraftForge.EVENT_BUS.addListener(this::onServerStarted);
+        MinecraftForge.EVENT_BUS.addListener(AQEHostLifecycleEvents::onLevelUnload);
+        MinecraftForge.EVENT_BUS.addListener(AQEHostLifecycleEvents::onServerStopping);
     }
 
     private void commonSetup(FMLCommonSetupEvent event) {

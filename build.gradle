@@ -120,6 +120,29 @@ dependencies {
 
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 
+    def acoJarProperty = findProperty('acoJar')
+    if (acoJarProperty != null) {
+        File acoJar = file(acoJarProperty)
+        if (!acoJar.isFile()) {
+            throw new GradleException("ACO contract JAR is missing: ${acoJar}")
+        }
+        def acoArchive = new java.util.jar.JarFile(acoJar)
+        try {
+            def metadataEntry = acoArchive.getJarEntry('META-INF/mods.toml')
+            if (metadataEntry == null) {
+                throw new GradleException("ACO contract JAR is not a Forge 1.20.1 artifact: ${acoJar}")
+            }
+            def metadata = acoArchive.getInputStream(metadataEntry).getText('UTF-8')
+            if (!metadata.contains('modId = "ae2_crafting_optimizer"')) {
+                throw new GradleException("ACO contract JAR has unexpected mod metadata: ${acoJar}")
+            }
+        } finally {
+            acoArchive.close()
+        }
+        compileOnly files(acoJar)
+        testRuntimeOnly files(acoJar)
+    }
+
     testImplementation platform('org.junit:junit-bom:5.10.3')
     testImplementation 'org.junit.jupiter:junit-jupiter'
 }
