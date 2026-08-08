@@ -11,6 +11,7 @@ import net.pedroksl.advanced_ae.common.entities.AdvCraftingBlockEntity;
 import net.neoforged.fml.ModList;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.Field;
 
 public final class AQEDiagnostics {
     private static final long TIB = 1024L * 1024L * 1024L * 1024L;
@@ -25,6 +26,8 @@ public final class AQEDiagnostics {
 
         logDetectedVersions();
         ok &= checkAdvancedAeApi();
+        ok &= checkExactDependencyVersions();
+        ok &= checkRequiredMixinTargets();
         ok &= checkRegisteredUnitTypes();
         logConfiguredPerformance();
 
@@ -65,12 +68,56 @@ public final class AQEDiagnostics {
         ok &= hasMethod(AdvCraftingBlockEntity.class, "getAcceleratorThreads");
         ok &= hasMethod(AdvCraftingBlockEntity.class, "getAccelerationMultiplier");
         ok &= hasDeclaredMethod(AdvCraftingCPUCluster.class, "addBlockEntity", AdvCraftingBlockEntity.class);
+        ok &= hasDeclaredMethod(AdvCraftingCPUCluster.class, "recalculateRemainingStorage");
+        ok &= hasDeclaredMethod(AdvCraftingCPUCluster.class, "getCoProcessors");
+        ok &= hasDeclaredMethod(AdvCraftingCPUCluster.class, "destroy");
+        ok &= hasDeclaredMethod(AdvCraftingCPUCluster.class, "breakCluster");
+        ok &= hasDeclaredMethod(AdvCraftingCPUCluster.class, "writeToNBT", net.minecraft.nbt.CompoundTag.class,
+                net.minecraft.core.HolderLookup.Provider.class);
+        ok &= hasDeclaredMethod(AdvCraftingCPUCluster.class, "readFromNBT", net.minecraft.nbt.CompoundTag.class,
+                net.minecraft.core.HolderLookup.Provider.class);
+        ok &= hasField(AdvCraftingCPUCluster.class, "accelerator", int.class);
+        ok &= hasField(AdvCraftingCPUCluster.class, "acceleratorMultiplier", int.class);
+        ok &= hasField(AdvCraftingCPUCluster.class, "storage", long.class);
+        ok &= hasField(AdvCraftingCPUCluster.class, "storageMultiplier", long.class);
+        ok &= hasField(AdvCraftingCPUCluster.class, "remainingStorage", long.class);
         ok &= hasUnitType("QUANTUM_CORE");
         ok &= hasUnitType("STORAGE_256M");
         ok &= hasUnitType("STORAGE_MULTIPLIER");
         ok &= hasUnitType("QUANTUM_ACCELERATOR");
         ok &= hasUnitType("MULTI_THREADER");
         return ok;
+    }
+
+    private static boolean checkExactDependencyVersions() {
+        boolean ok = true;
+        ok &= checkExactVersion("ae2", "19.2.17");
+        ok &= checkExactVersion(AdvancedAEIntegration.MODID, "1.6.11");
+        ok &= checkExactVersion(OmniCellsIntegration.MODID, "1.1.6");
+        return ok;
+    }
+
+    private static boolean checkRequiredMixinTargets() {
+        boolean ok = AQEBigIntegerCpuAccess.class.isAssignableFrom(AdvCraftingCPUCluster.class);
+        if (!ok) {
+            AdvancedQuantumEngineering.LOGGER.error(
+                    "AQE cluster Mixin was not applied to {} before state changes",
+                    AdvCraftingCPUCluster.class.getName());
+        }
+        return ok;
+    }
+
+    private static boolean checkExactVersion(String modId, String expected) {
+        String actual = getVersion(modId);
+        if (expected.equals(actual)) {
+            return true;
+        }
+        AdvancedQuantumEngineering.LOGGER.error(
+                "AQE compatibility contract mismatch for {}: expected {}, found {}",
+                modId,
+                expected,
+                actual);
+        return false;
     }
 
     private static boolean hasMethod(Class<?> owner, String name) {
@@ -92,6 +139,22 @@ public final class AQEDiagnostics {
             AdvancedQuantumEngineering.LOGGER.error("Missing expected method: {}.{}(...)", owner.getName(), name);
             return false;
         }
+    }
+
+    private static boolean hasField(Class<?> owner, String name, Class<?> expectedType) {
+        try {
+            Field field = owner.getDeclaredField(name);
+            if (field.getType() == expectedType) {
+                return true;
+            }
+            AdvancedQuantumEngineering.LOGGER.error(
+                    "Unexpected field type: {}.{} expected {}, got {}",
+                    owner.getName(), name, expectedType.getName(), field.getType().getName());
+        } catch (NoSuchFieldException e) {
+            AdvancedQuantumEngineering.LOGGER.error(
+                    "Missing expected field: {}.{}", owner.getName(), name);
+        }
+        return false;
     }
 
     private static boolean hasUnitType(String name) {
