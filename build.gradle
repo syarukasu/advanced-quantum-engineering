@@ -6,7 +6,11 @@ group = mod_group
 version = mod_version
 
 base {
-    archivesName = 'advanced-quantum-engineering'
+    archivesName = "aqe${mod_version}_${minecraft_version}"
+}
+
+tasks.named('jar') {
+    archiveFileName = "aqe${mod_version}_${minecraft_version}.jar"
 }
 
 java {

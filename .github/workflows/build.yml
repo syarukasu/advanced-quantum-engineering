@@ -29,9 +29,29 @@ jobs:
           chmod +x gradlew
           ./gradlew clean build --stacktrace
 
+      - name: Verify 1.20.1 artifact boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$(grep '^mod_version=' gradle.properties | cut -d= -f2)"
+          artifact="build/libs/aqe${version}_1.20.1.jar"
+          test -f "$artifact"
+          jar tf "$artifact" | grep -q '^META-INF/mods.toml$'
+          ! jar tf "$artifact" | grep -q '^META-INF/neoforge.mods.toml$'
+          ! jar tf "$artifact" | grep -q 'net/neoforged/'
+          ! jar tf "$artifact" | grep -q '1.21.1'
+          python3 - "$artifact" <<'PY'
+          import sys, zipfile
+          with zipfile.ZipFile(sys.argv[1]) as jar:
+              classes = [n for n in jar.namelist() if n.endswith('.class')]
+              assert classes, 'artifact contains no class files'
+              versions = {int.from_bytes(jar.read(n)[6:8], 'big') for n in classes}
+              assert versions == {61}, f'unexpected class versions: {versions}'
+          PY
+
       - name: Upload jar
         uses: actions/upload-artifact@v6
         with:
-          name: advanced-quantum-engineering-${{ github.sha }}
-          path: build/libs/*.jar
+          name: aqe-1.20.1-${{ github.sha }}
+          path: build/libs/aqe*_1.20.1.jar
           if-no-files-found: error
