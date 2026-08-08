@@ -27,6 +27,16 @@ public interface AQEBigCraftingHost extends AutoCloseable {
         return 0;
     }
 
+    /** True while the host is preserving an unverified payload without accepting jobs. */
+    default boolean isPaused() {
+        return false;
+    }
+
+    /** Stable diagnostic state for UI and startup reports. */
+    default String stateHint() {
+        return isPaused() ? "PAUSED" : "ACTIVE";
+    }
+
     String backendId();
 
     boolean hasPersistentState();
