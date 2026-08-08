@@ -155,12 +155,12 @@ AE2 network/crafting optimizations are handled by the separate `ae2-crafting-opt
 `ae2-crafting-optimizer` is not a required dependency.
 
 - AQE without ACO: the BigInteger core forms normally, exact aggregate capacity is retained, and standard AE2/Advanced AE jobs remain supported.
-- AQE with compatible ACO `[1.6.0,1.7.0)` releases: AQE reflectively activates ACO BigInteger host API v3. Standard long jobs and exact BigInteger parent jobs share one physical capacity ledger. ACO divides a deterministic parent into recipe-specific checked-long child windows and keeps their reservations tied to the parent.
+- AQE with the tested ACO `1.6.2` release: AQE reflectively activates ACO BigInteger host API v3. Standard long jobs and exact BigInteger parent jobs share one physical capacity ledger. ACO divides a deterministic parent into recipe-specific checked-long child windows and keeps their reservations tied to the parent.
 - ACO present but disabled: AQE uses its local long-compatible backend.
 - ACO removed while native BigInteger state exists: AQE preserves the opaque versioned NBT and keeps its reservation unavailable, preventing double spending. Reinstalling compatible ACO restores the state.
 - Unsupported ACO version: the default fail-fast diagnostic stops loading instead of discarding or misreading saved state.
 
-AQE contains no runtime ACO class reference. The optional adapter resolves and validates API v3 only after NeoForge reports a compatible ACO `[1.6.0,1.7.0)` release as loaded. ACO keeps exact BigInteger plan and inventory values in its own sidecars; AQE receives only the registered API v3 host and does not depend on those internal classes.
+AQE contains no runtime ACO class reference. The optional adapter resolves and validates API v3 only after NeoForge reports the tested ACO `1.6.2` release as loaded. ACO keeps exact BigInteger plan and inventory values in its own sidecars; AQE receives only the registered API v3 host and does not depend on those internal classes.
 
 ## Build
 
