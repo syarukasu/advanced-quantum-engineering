@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Changed
+
+- Moved Quantum Computer capacity, multiplier, accelerator, and reservation
+  accounting to separate revisions. Structure values are rebuilt once after a
+  formation change; repeated coprocessor and GUI reads reuse the cached result.
+- Added an atomic host snapshot boundary for ACO v3. When available, AQE reads
+  capacity, reservations, availability, job counts, and backend state together
+  instead of issuing separate reflection getters.
+- Added bounded revision diagnostics for structure scans, reservation rebuilds,
+  host snapshot reads, host reconciles, and presentation reuse.
+
 ## [2.2.4] - 2026-08-10
 
 ### Changed
@@ -24,14 +35,8 @@
 
 ### Changed
 
-- Moved Quantum Computer capacity, multiplier, accelerator, and reservation
-  accounting to separate revisions. Structure values are rebuilt once after a
-  formation change; repeated coprocessor and GUI reads reuse the cached result.
-- Added an atomic host snapshot boundary for ACO v3. When available, AQE reads
-  capacity, reservations, availability, job counts, and backend state together
-  instead of issuing separate reflection getters.
-- Added bounded revision diagnostics for structure scans, reservation rebuilds,
-  host snapshot reads, host reconciles, and presentation reuse.
+- Added lifecycle ownership and opaque-state quarantine for the optional
+  BigInteger crafting host.
 
 ## 2.3.0 - 2026-08-02
 

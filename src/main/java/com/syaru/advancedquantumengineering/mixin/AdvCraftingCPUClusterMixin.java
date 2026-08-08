@@ -315,7 +315,6 @@ public abstract class AdvCraftingCPUClusterMixin implements AQEBigIntegerCpuAcce
             AQERevisionMetrics.recordReservationRebuild();
             AQERevisionMetrics.recordHostReconcile();
         }
-
         this.storage = BigIntegerCapacityMath.saturatedLong(
                 aqe$cachedStorageContributions, AQEConfig.MAX_BIG_INTEGER_BITS);
         this.storageMultiplier = BigIntegerCapacityMath.saturatedLong(
