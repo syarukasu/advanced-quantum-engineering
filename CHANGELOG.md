@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## 2.3.1 - 2026-08-08
+
 ### Changed
 
 - Moved Quantum Computer capacity, multiplier, accelerator, and reservation
