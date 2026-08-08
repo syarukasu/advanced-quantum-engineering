@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+## [2.3.2] - 2026-08-08
+
+### Changed
+
+- Updated the optional ACO integration range to `[1.5.7,1.6.0)` for the
+  NeoForge 1.21.1 ACO build.
+- Kept the Minecraft version (`1.21.1`) separate from the AQE mod version.
+
 ## 2.3.1 - 2026-08-08
 
 ### Changed
