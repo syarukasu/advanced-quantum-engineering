@@ -4,7 +4,7 @@ Advanced Quantum Engineering 2.3.1 adds upgraded Advanced AE Quantum Computer pa
 
 This release targets Minecraft 1.21.1, NeoForge 21.1.247+, Java 21, Applied Energistics 2 19.2.17, Advanced AE 1.6.11-1.21.1, and AE2 Omni Cells 1.1.6. The persistent branch is `mc/1.21.1`, and its artifact is named `aqe<version>_1.21.1.jar`. AQE 2.2.x remains the independent Forge 1.20.1 line on `mc/1.20.1`, with artifacts named `aqe<version>_1.20.1.jar`.
 
-AE2 crafting and synchronization optimization code is intentionally not part of this mod. It lives in the separate `ae2-crafting-optimizer` project so Quantum Computer block behavior and AE2 optimization behavior can be tested independently. Compatible ACO 1.6.x releases are optional: AQE runs without ACO and uses its versioned BigInteger host API when it is present and enabled.
+AE2 crafting and synchronization optimization code is intentionally not part of this mod. It lives in the separate `ae2-crafting-optimizer` project so Quantum Computer block behavior and AE2 optimization behavior can be tested independently. Compatible ACO 1.5.7 releases are optional: AQE runs without ACO and uses its versioned BigInteger host API when it is present and enabled.
 
 The optional ACO compile contract is supplied explicitly with
 `-PacoJar=/absolute/path/to/aco<version>_<mc>.jar`; AQE never inspects a fixed
@@ -155,12 +155,12 @@ AE2 network/crafting optimizations are handled by the separate `ae2-crafting-opt
 `ae2-crafting-optimizer` is not a required dependency.
 
 - AQE without ACO: the BigInteger core forms normally, exact aggregate capacity is retained, and standard AE2/Advanced AE jobs remain supported.
-- AQE with compatible ACO `[1.6.0,1.7.0)` releases: AQE reflectively activates ACO BigInteger host API v3. Standard long jobs and exact BigInteger parent jobs share one physical capacity ledger. ACO divides a deterministic parent into recipe-specific checked-long child windows and keeps their reservations tied to the parent.
+- AQE with compatible ACO `[1.5.7,1.6.0)` releases: AQE reflectively activates ACO BigInteger host API v3. Standard long jobs and exact BigInteger parent jobs share one physical capacity ledger. ACO divides a deterministic parent into recipe-specific checked-long child windows and keeps their reservations tied to the parent.
 - ACO present but disabled: AQE uses its local long-compatible backend.
 - ACO removed while native BigInteger state exists: AQE preserves the opaque versioned NBT and keeps its reservation unavailable, preventing double spending. Reinstalling compatible ACO restores the state.
 - Unsupported ACO version: the default fail-fast diagnostic stops loading instead of discarding or misreading saved state.
 
-AQE contains no runtime ACO class reference. The optional adapter resolves and validates API v3 only after NeoForge reports a compatible ACO `[1.6.0,1.7.0)` release as loaded. ACO keeps exact BigInteger plan and inventory values in its own sidecars; AQE receives only the registered API v3 host and does not depend on those internal classes.
+AQE contains no runtime ACO class reference. The optional adapter resolves and validates API v3 only after NeoForge reports a compatible ACO `[1.5.7,1.6.0)` release as loaded. ACO keeps exact BigInteger plan and inventory values in its own sidecars; AQE receives only the registered API v3 host and does not depend on those internal classes.
 
 ## Build
 
@@ -172,7 +172,7 @@ Run:
 gradlew.bat clean build --no-daemon
 ```
 
-The generated jar is written under `build/libs/aqe2.3.1_1.21.1.jar`.
+The generated jar is written under `build/libs/aqe2.3.2_1.21.1.jar`.
 
 When cloning outside the Prism instance, pass `-PaqeLocalModsDir=<directory>` containing the pinned dependency JARs.
 
