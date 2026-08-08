@@ -118,7 +118,8 @@ public final class AcoBigCraftingBackend implements AQEBigCraftingBackend {
             Method bigReserved,
             Method bigJobCount,
             Method managedChildJobCount,
-            Method save) {
+            Method save,
+            SnapshotMethods snapshot) {
         private RuntimeMethods(Class<?> hostType) throws NoSuchMethodException {
             this(
                     hostType.getMethod("resizePhysicalCapacity", BigInteger.class),
@@ -130,7 +131,8 @@ public final class AcoBigCraftingBackend implements AQEBigCraftingBackend {
                     hostType.getMethod("bigReserved"),
                     optionalMethod(hostType, "bigJobCount"),
                     optionalMethod(hostType, "managedChildJobCount"),
-                    hostType.getMethod("save"));
+                    hostType.getMethod("save"),
+                    SnapshotMethods.find(hostType));
         }
 
         private static Method optionalMethod(Class<?> owner, String name) {
@@ -138,6 +140,44 @@ public final class AcoBigCraftingBackend implements AQEBigCraftingBackend {
                 return owner.getMethod(name);
             } catch (NoSuchMethodException unsupportedOlderApi) {
                 // ACO API v3初期版には件数getterがないため、容量連携を壊さず表示だけ0へ戻す。
+                return null;
+            }
+        }
+    }
+
+    private record SnapshotMethods(
+            Method snapshot,
+            Method physicalCapacity,
+            Method reserved,
+            Method available,
+            Method standardJobCount,
+            Method bigJobCount,
+            Method managedChildJobCount,
+            Method overcommitted,
+            Method backendState,
+            Method activeState) {
+        private static SnapshotMethods find(Class<?> hostType) {
+            try {
+                Class<?> stateType = Class.forName(
+                        "com.syaru.ae2craftingoptimizer.api.big.BigCraftingHostBackendState",
+                        false,
+                        hostType.getClassLoader());
+                Class<?> snapshotType = Class.forName(
+                        "com.syaru.ae2craftingoptimizer.api.big.BigCraftingHostSnapshot",
+                        false,
+                        hostType.getClassLoader());
+                return new SnapshotMethods(
+                        hostType.getMethod("snapshot", long.class, stateType),
+                        snapshotType.getMethod("physicalCapacity"),
+                        snapshotType.getMethod("reserved"),
+                        snapshotType.getMethod("available"),
+                        snapshotType.getMethod("standardJobCount"),
+                        snapshotType.getMethod("bigJobCount"),
+                        snapshotType.getMethod("managedChildJobCount"),
+                        snapshotType.getMethod("overcommitted"),
+                        snapshotType.getMethod("backendState"),
+                        stateType.getMethod("valueOf", String.class));
+            } catch (ReflectiveOperationException unsupportedOlderAco) {
                 return null;
             }
         }
@@ -190,6 +230,27 @@ public final class AcoBigCraftingBackend implements AQEBigCraftingBackend {
         public long availableAsSaturatedLong() {
             ensureOpen();
             return ((Number) invoke(methods.availableAsSaturatedLong(), runtime)).longValue();
+        }
+
+        @Override
+        public synchronized AQEHostSnapshot snapshot(long revision) {
+            ensureOpen();
+            SnapshotMethods snapshot = methods.snapshot();
+            if (snapshot == null) {
+                return AQEBigCraftingHost.super.snapshot(revision);
+            }
+            Object activeState = invoke(snapshot.activeState(), null, "ACTIVE");
+            Object raw = invoke(snapshot.snapshot(), runtime, revision, activeState);
+            return new AQEHostSnapshot(
+                    revision,
+                    (BigInteger) invoke(snapshot.physicalCapacity(), raw),
+                    (BigInteger) invoke(snapshot.reserved(), raw),
+                    (BigInteger) invoke(snapshot.available(), raw),
+                    ((Number) invoke(snapshot.standardJobCount(), raw)).longValue(),
+                    ((Number) invoke(snapshot.bigJobCount(), raw)).longValue(),
+                    ((Number) invoke(snapshot.managedChildJobCount(), raw)).longValue(),
+                    (boolean) invoke(snapshot.overcommitted(), raw),
+                    ((Enum<?>) invoke(snapshot.backendState(), raw)).name());
         }
 
         @Override
