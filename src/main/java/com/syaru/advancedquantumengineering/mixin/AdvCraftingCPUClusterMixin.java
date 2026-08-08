@@ -254,14 +254,19 @@ public abstract class AdvCraftingCPUClusterMixin implements AQEBigIntegerCpuAcce
         if (aqe$bigHost == null) {
             advancedQuantumEngineering$replaceHost(new CompoundTag(), physicalCapacity);
         }
-        aqe$bigHost.reconcile(physicalCapacity, reservations);
-
-        BigInteger summedStorage = aqe$sumStorageContributions();
-        BigInteger summedMultiplier = aqe$sumStorageMultipliers();
+        if (aqe$reconciledStructureRevision != aqe$structureRevision
+                || aqe$reconciledCpuRevision != aqe$activeCpuRevision) {
+            aqe$bigHost.reconcile(physicalCapacity, reservations);
+            aqe$reconciledStructureRevision = aqe$structureRevision;
+            aqe$reconciledCpuRevision = aqe$activeCpuRevision;
+            aqe$hostRevision = nextRevision(aqe$hostRevision);
+            AQERevisionMetrics.recordReservationRebuild();
+            AQERevisionMetrics.recordHostReconcile();
+        }
         this.storage = BigIntegerCapacityMath.saturatedLong(
-                summedStorage, AQEConfig.MAX_BIG_INTEGER_BITS);
+                aqe$cachedStorageContributions, AQEConfig.MAX_BIG_INTEGER_BITS);
         this.storageMultiplier = BigIntegerCapacityMath.saturatedLong(
-                summedMultiplier, AQEConfig.MAX_BIG_INTEGER_BITS);
+                aqe$cachedStorageMultipliers, AQEConfig.MAX_BIG_INTEGER_BITS);
         this.remainingStorage = aqe$bigHost.availableAsSaturatedLong();
         this.aqe$physicalCapacity = physicalCapacity;
         this.aqe$availableCapacity = aqe$bigHost.available();

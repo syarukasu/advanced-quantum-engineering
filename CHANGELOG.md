@@ -2,12 +2,45 @@
 
 ## [Unreleased]
 
+### Changed
+
+- Moved Quantum Computer capacity, multiplier, accelerator, and reservation
+  accounting to separate revisions. Structure values are rebuilt once after a
+  formation change; repeated coprocessor and GUI reads reuse the cached result.
+- Added an atomic host snapshot boundary for ACO v3. When available, AQE reads
+  capacity, reservations, availability, job counts, and backend state together
+  instead of issuing separate reflection getters.
+- Added bounded revision diagnostics for structure scans, reservation rebuilds,
+  host snapshot reads, host reconciles, and presentation reuse.
+
 ## 2.2.3 - 2026-08-08
 
 ### Changed
 
-- Synchronized the Forge 1.20.1 compatibility release with ACO 1.5.7 and
-  AAC 1.0.2.
+- Published the NeoForge 1.21.1 build with the same AQE mod version `2.2.3`.
+- Kept the Minecraft version (`1.21.1`) separate from the AQE mod version and
+  artifact suffix.
+
+## 2.3.1 - 2026-08-08
+
+### Changed
+
+- Added lifecycle ownership and opaque-state quarantine for the optional
+  BigInteger crafting host.
+
+## 2.3.0 - 2026-08-02
+
+### Added
+
+- Added the NeoForge 1.21.1 release line using Java 21.
+- Added pinned support for AE2 19.2.17, Advanced AE 1.6.11-1.21.1, and
+  AE2 Omni Cells 1.1.6.
+
+### Changed
+
+- Migrated the production build and resource layout to NeoForge 21.1.247.
+- Updated the optional BigInteger host integration range to ACO 1.6.x.
+- Kept AQE 2.2.x and its release artifacts as the Forge 1.20.1 line.
 
 ## 2.2.2 - 2026-07-29
 
