@@ -89,6 +89,7 @@ dependencies {
             acoArchive.close()
         }
         compileOnly files(acoJar)
+        testRuntimeOnly files(acoJar)
     }
 
     annotationProcessor 'org.spongepowered:mixin:0.8.7:processor'
