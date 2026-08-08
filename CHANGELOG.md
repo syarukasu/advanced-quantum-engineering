@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+## 2.2.3 - 2026-08-08
+
+### Changed
+
+- Synchronized the Forge 1.20.1 compatibility release with ACO 1.5.7 and
+  AAC 1.0.2.
+
 ## 2.2.2 - 2026-07-29
 
 ### Fixed
