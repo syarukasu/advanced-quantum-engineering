@@ -1,6 +1,6 @@
 # Advanced Quantum Engineering
 
-Advanced Quantum Engineering 2.3.0 adds upgraded Advanced AE Quantum Computer parts that use the original Quantum Computer multiblock system.
+Advanced Quantum Engineering 2.3.1 adds upgraded Advanced AE Quantum Computer parts that use the original Quantum Computer multiblock system.
 
 This release targets Minecraft 1.21.1, NeoForge 21.1.247+, Java 21, Applied Energistics 2 19.2.17, Advanced AE 1.6.11-1.21.1, and AE2 Omni Cells 1.1.6. The persistent branch is `mc/1.21.1`, and its artifact is named `aqe<version>_1.21.1.jar`. AQE 2.2.x remains the independent Forge 1.20.1 line on `mc/1.20.1`, with artifacts named `aqe<version>_1.20.1.jar`.
 
@@ -80,7 +80,7 @@ The experimental core exposes maximum test values:
 - Storage: `9,223,372,036,854,775,806` bytes, `Long.MAX_VALUE - 1`
 - Co-processors: `2,147,483,646`, `Integer.MAX_VALUE - 1`
 
-AQE 2.3.0 calculates the complete structure capacity, including summed storage and Data Entangler multipliers, with checked `BigInteger` arithmetic. Advanced AE's existing `long` API receives a saturated facade, while AQE keeps the exact physical, reserved, and available totals internally. Co-processors remain bounded to `2,147,483,646` because AE2 and Advanced AE expose that value as `int`.
+AQE 2.3.1 calculates the complete structure capacity, including summed storage and Data Entangler multipliers, with checked `BigInteger` arithmetic. Advanced AE's existing `long` API receives a saturated facade, while AQE keeps the exact physical, reserved, and available totals internally. Co-processors remain bounded to `2,147,483,646` because AE2 and Advanced AE expose that value as `int`.
 
 One standard AE2 crafting plan still contains signed-`long` compatibility boundaries. The BigInteger total is useful because one Advanced AE Quantum Computer can own multiple active jobs: AQE accounts all of those normal jobs against the same exact capacity without overflowing their sum. Native jobs larger than `long` require the optional ACO BigInteger execution API; AQE does not replace the normal AE2 terminal or pretend that every external API has a wider count type.
 
@@ -172,7 +172,7 @@ Run:
 gradlew.bat clean build --no-daemon
 ```
 
-The generated jar is written under `build/libs/advanced-quantum-engineering-2.3.0.jar`.
+The generated jar is written under `build/libs/aqe2.3.1_1.21.1.jar`.
 
 When cloning outside the Prism instance, pass `-PaqeLocalModsDir=<directory>` containing the pinned dependency JARs.
 
