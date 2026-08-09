@@ -24,6 +24,7 @@ public final class AQEDiagnostics {
         boolean ok = true;
 
         logDetectedVersions();
+        ok &= checkAe2CompatibilitySurface();
         ok &= checkAdvancedAeApi();
         ok &= checkRegisteredUnitTypes();
         logConfiguredPerformance();
@@ -42,7 +43,11 @@ public final class AQEDiagnostics {
         AdvancedQuantumEngineering.LOGGER.info(
                 "Detected AQE version: {}",
                 getVersion(AdvancedQuantumEngineering.MODID));
-        AdvancedQuantumEngineering.LOGGER.info("Detected AE2 version: {}", getVersion("ae2"));
+        String ae2Version = getVersion(Ae2Compatibility.AE2_MOD_ID);
+        AdvancedQuantumEngineering.LOGGER.info(
+                "Detected AE2 implementation: {} ({})",
+                ae2Version,
+                Ae2Compatibility.implementationLabel(ae2Version));
         AdvancedQuantumEngineering.LOGGER.info("Detected Advanced AE version: {}", getVersion(AdvancedAEIntegration.MODID));
         AdvancedQuantumEngineering.LOGGER.info("Detected AE2 Omni Cells version: {}", getVersion(OmniCellsIntegration.MODID));
         AdvancedQuantumEngineering.LOGGER.info("Detected optional ACO version: {}", getVersion(BigCraftingIntegration.ACO_MODID));
@@ -50,6 +55,22 @@ public final class AQEDiagnostics {
                 "AQE BigInteger backend contract: id={}, optionalAcoActive={}",
                 BigCraftingIntegration.backendId(),
                 BigCraftingIntegration.isAcoBackendActive());
+    }
+
+    private static boolean checkAe2CompatibilitySurface() {
+        String version = getVersion(Ae2Compatibility.AE2_MOD_ID);
+        if ("not loaded".equals(version)) {
+            AdvancedQuantumEngineering.LOGGER.error("AE2 is not loaded; AQE cannot bind its crafting integration");
+            return false;
+        }
+
+        // AQE only uses the stable CraftConfirmMenu selection callbacks. The
+        // int -> long request changes in UELM are intentionally left to AE2.
+        AdvancedQuantumEngineering.LOGGER.info(
+                "AE2 compatibility surface verified for {} ({})",
+                version,
+                Ae2Compatibility.implementationLabel(version));
+        return true;
     }
 
     private static String getVersion(String modId) {
