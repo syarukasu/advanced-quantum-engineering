@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test;
 class OptionalAcoMetadataTest {
     @Test
     void runtimeContractMatchesOptionalDependencyMetadata() throws IOException {
-        assertEquals("[1.5.7,1.6.0)", BigCraftingIntegration.SUPPORTED_ACO_VERSION_RANGE);
+        assertEquals("[1.5.9,1.6.0)", BigCraftingIntegration.SUPPORTED_ACO_VERSION_RANGE);
 
         String metadata;
         try (InputStream input = getClass().getClassLoader()
