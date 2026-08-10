@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+## [2.2.4] - 2026-08-10
+
+### Changed
+
+- Synchronized the NeoForge 1.21.1 artifact version with the Forge 1.20.1
+  AQE 2.2.4 maintenance release.
+- Kept the NeoForge runtime implementation unchanged because the AE2-UELM
+  compatibility profile added by 2.2.4 applies only to Forge 1.20.1.
+- Raised the optional compatible ACO minimum to 1.5.9.
+
 ## [2.2.3] - 2026-08-08
 
 ### Changed
