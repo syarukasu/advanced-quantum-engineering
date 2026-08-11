@@ -96,10 +96,12 @@ public final class AcoBigCraftingBackend implements AQEBigCraftingBackend {
 
     @Override
     public AQEBigCraftingHost create(
-            Object owner,
+            Object lifecycleOwner,
+            Object backendRegistryOwner,
             BigInteger physicalCapacity,
             CompoundTag savedState) {
-        Objects.requireNonNull(owner, "owner");
+        Objects.requireNonNull(lifecycleOwner, "lifecycleOwner");
+        Objects.requireNonNull(backendRegistryOwner, "backendRegistryOwner");
         Object runtime;
         if (AQEBigCraftingHostState.isPresent(savedState)) {
             AQEBigCraftingHostState.Decoded decoded = AQEBigCraftingHostState.decode(savedState);
@@ -111,8 +113,31 @@ public final class AcoBigCraftingBackend implements AQEBigCraftingBackend {
         } else {
             runtime = invoke(createHost, null, physicalCapacity, keyCodec);
         }
-        Object registration = invoke(register, null, owner, runtime);
-        return new Host(owner, runtime, registration, registrationClose, unregister, runtimeMethods);
+        /*
+         * ACO looks up a host with AdvCraftingCPUCluster identity during
+         * submitJob. Register under that real cluster object rather than the
+         * AQE generation token used by AQE's separate lifecycle registry.
+         */
+        Object registration = invoke(register, null, backendRegistryOwner, runtime);
+        return new Host(
+                lifecycleOwner,
+                backendRegistryOwner,
+                runtime,
+                registration,
+                registrationClose,
+                unregister,
+                runtimeMethods);
+    }
+
+    /**
+     * Keeps the pre-owner-split test and integration call shape working.
+     * Older callers used one identity for both lifecycle and ACO lookup.
+     */
+    public AQEBigCraftingHost create(
+            Object owner,
+            BigInteger physicalCapacity,
+            CompoundTag savedState) {
+        return create(owner, owner, physicalCapacity, savedState);
     }
 
     private static Object invoke(Method method, Object target, Object... arguments) {
@@ -169,6 +194,7 @@ public final class AcoBigCraftingBackend implements AQEBigCraftingBackend {
 
     private static final class Host implements AQEBigCraftingHost {
         private final Object owner;
+        private final Object backendRegistryOwner;
         private final Object runtime;
         private final Object registration;
         private final Method registrationClose;
@@ -178,12 +204,14 @@ public final class AcoBigCraftingBackend implements AQEBigCraftingBackend {
 
         private Host(
                 Object owner,
+                Object backendRegistryOwner,
                 Object runtime,
                 Object registration,
                 Method registrationClose,
                 Method unregister,
                 RuntimeMethods methods) {
             this.owner = owner;
+            this.backendRegistryOwner = backendRegistryOwner;
             this.runtime = runtime;
             this.registration = registration;
             this.registrationClose = registrationClose;
@@ -270,7 +298,7 @@ public final class AcoBigCraftingBackend implements AQEBigCraftingBackend {
                     invoke(registrationClose, registration);
                 } else {
                     // Compatibility with an older API that returned void from register.
-                    invoke(unregister, null, owner);
+                    invoke(unregister, null, backendRegistryOwner);
                 }
                 closed = true;
             }

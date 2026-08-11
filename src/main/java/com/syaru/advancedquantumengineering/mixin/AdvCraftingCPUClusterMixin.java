@@ -331,7 +331,10 @@ public abstract class AdvCraftingCPUClusterMixin implements AQEBigIntegerCpuAcce
                 ++aqe$hostGeneration,
                 advancedQuantumEngineering$lifecycleOwner());
         AQEBigCraftingHost replacement = BigCraftingIntegration.createHost(
-                owner, physicalCapacity, savedState);
+                owner,
+                this,
+                physicalCapacity,
+                savedState);
         AQEHostRegistration replacementRegistration = AQEHostRegistration.open(owner, replacement);
         AQEHostRegistration previousRegistration = aqe$hostRegistration;
         aqe$bigHost = replacement;

@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Test;
 class AcoBigCraftingBackendTest {
     @Test
     void bindsOnlyThroughTheReflectedOptionalApi() throws ReflectiveOperationException {
+        assumeAcoApiIsPresent();
         AcoBigCraftingBackend backend = new AcoBigCraftingBackend();
         assumeAcoRuntimeIsLoaded(backend);
         Object owner = new Object();
@@ -41,6 +42,7 @@ class AcoBigCraftingBackendTest {
     @Test
     void restoresOpaqueAcoPayloadWithoutLosingBigReservation()
             throws ReflectiveOperationException {
+        assumeAcoApiIsPresent();
         AcoBigCraftingBackend backend = new AcoBigCraftingBackend();
         assumeAcoRuntimeIsLoaded(backend);
         Object firstOwner = new Object();
@@ -74,6 +76,15 @@ class AcoBigCraftingBackendTest {
                 "com.syaru.ae2craftingoptimizer.api.big.BigCraftingHostRegistry");
         Method findRegistration = registry.getMethod("findRegistration", Object.class);
         return (Optional<?>) findRegistration.invoke(null, owner);
+    }
+
+    /** 任意依存をGradleの単体テストへ同梱しない構成では、この連携試験をSkipする。 */
+    private static void assumeAcoApiIsPresent() {
+        try {
+            Class.forName("com.syaru.ae2craftingoptimizer.api.big.BigCraftingEngineApi");
+        } catch (ClassNotFoundException missingOptionalDependency) {
+            Assumptions.assumeTrue(false, "ACO runtime API is not on the unit-test classpath");
+        }
     }
 
     /** ForgeのModListとACO設定が揃う実環境だけで任意連携の状態試験を実行する。 */
