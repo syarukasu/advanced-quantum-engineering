@@ -92,10 +92,10 @@ public final class AQEDiagnostics {
         ok &= hasDeclaredMethod(AdvCraftingCPUCluster.class, "getCoProcessors");
         ok &= hasDeclaredMethod(AdvCraftingCPUCluster.class, "destroy");
         ok &= hasDeclaredMethod(AdvCraftingCPUCluster.class, "breakCluster");
-        ok &= hasDeclaredMethod(AdvCraftingCPUCluster.class, "writeToNBT", net.minecraft.nbt.CompoundTag.class,
-                net.minecraft.core.HolderLookup.Provider.class);
-        ok &= hasDeclaredMethod(AdvCraftingCPUCluster.class, "readFromNBT", net.minecraft.nbt.CompoundTag.class,
-                net.minecraft.core.HolderLookup.Provider.class);
+        // Advanced AE 1.3.5 and 1.3.6 on Forge 1.20.1 use the one-argument
+        // NBT contract; the HolderLookup overload belongs to another line.
+        ok &= hasDeclaredMethod(AdvCraftingCPUCluster.class, "writeToNBT", net.minecraft.nbt.CompoundTag.class);
+        ok &= hasDeclaredMethod(AdvCraftingCPUCluster.class, "readFromNBT", net.minecraft.nbt.CompoundTag.class);
         ok &= hasField(AdvCraftingCPUCluster.class, "accelerator", int.class);
         ok &= hasField(AdvCraftingCPUCluster.class, "acceleratorMultiplier", int.class);
         ok &= hasField(AdvCraftingCPUCluster.class, "storage", long.class);
