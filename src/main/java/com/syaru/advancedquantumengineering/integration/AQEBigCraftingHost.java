@@ -5,7 +5,13 @@ import java.util.Map;
 import java.util.UUID;
 import net.minecraft.nbt.CompoundTag;
 
-/** AQE-owned boundary; implementations may be local or supplied by optional ACO integration. */
+/**
+ * AQE-owned boundary; implementations may be local or supplied by optional ACO integration.
+ *
+ * <p>{@link #close()}は新しい会計変更と外部Registry登録を終了する。停止処理中の
+ * 最終BlockEntity保存を壊さないよう、容量getter、{@link #snapshot(long)}、
+ * {@link #save()}はclose後も最後の状態を読み取れる必要がある。</p>
+ */
 public interface AQEBigCraftingHost extends AutoCloseable {
     void reconcile(BigInteger physicalCapacity, Map<UUID, BigInteger> standardJobReservations);
 

@@ -38,7 +38,7 @@ public final class AdvancedQuantumEngineering {
         modBus.addListener(this::commonSetup);
         MinecraftForge.EVENT_BUS.addListener(this::onServerStarted);
         MinecraftForge.EVENT_BUS.addListener(AQEHostLifecycleEvents::onLevelUnload);
-        MinecraftForge.EVENT_BUS.addListener(AQEHostLifecycleEvents::onServerStopping);
+        MinecraftForge.EVENT_BUS.addListener(AQEHostLifecycleEvents::onServerStopped);
     }
 
     private void commonSetup(FMLCommonSetupEvent event) {

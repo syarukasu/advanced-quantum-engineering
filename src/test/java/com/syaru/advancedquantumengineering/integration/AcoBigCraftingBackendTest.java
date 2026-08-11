@@ -2,14 +2,18 @@ package com.syaru.advancedquantumengineering.integration;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.electronwill.nightconfig.core.CommentedConfig;
 import java.math.BigInteger;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraftforge.common.ForgeConfigSpec;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 
@@ -65,6 +69,42 @@ class AcoBigCraftingBackendTest {
         restored.close();
     }
 
+    @Test
+    void closedHostRemainsReadableForFinalWorldSave()
+            throws ReflectiveOperationException {
+        assumeAcoApiIsPresent();
+        loadAcoConfigDefaults();
+        AcoBigCraftingBackend backend = new AcoBigCraftingBackend();
+        Object owner = new Object();
+        BigInteger capacity = BigInteger.TEN.pow(64);
+        BigInteger reservation = BigInteger.TEN.pow(32);
+        AQEBigCraftingHost host = backend.create(owner, capacity, new CompoundTag());
+        host.reconcile(capacity, Map.of(UUID.randomUUID(), reservation));
+        CompoundTag savedBeforeClose = host.save();
+
+        host.close();
+
+        assertEquals(capacity, host.physicalCapacity());
+        assertEquals(reservation, host.reserved());
+        assertEquals(capacity.subtract(reservation), host.available());
+        assertEquals(savedBeforeClose, host.save());
+        assertThrows(
+                IllegalStateException.class,
+                () -> host.reconcile(capacity, Map.of()));
+    }
+
+    /** Minecraftを起動しないJUnitでも、ACOのForge Config既定値だけを有効にする。 */
+    private static void loadAcoConfigDefaults() throws ReflectiveOperationException {
+        Class<?> configClass = Class.forName(
+                "com.syaru.ae2craftingoptimizer.config.ACOConfig");
+        Field specField = configClass.getDeclaredField("SPEC");
+        specField.setAccessible(true);
+        ForgeConfigSpec spec = (ForgeConfigSpec) specField.get(null);
+        CommentedConfig defaults = CommentedConfig.inMemory();
+        spec.correct(defaults);
+        spec.setConfig(defaults);
+    }
+
     /** 公開RegistryだけをReflectionで読み、AQEの本番コードと同じ任意依存境界を検証する。 */
     private static Object findRegistration(Object owner) throws ReflectiveOperationException {
         return findRegistrationOptional(owner).orElseThrow();
@@ -92,7 +132,8 @@ class AcoBigCraftingBackendTest {
         boolean available;
         try {
             available = backend.isAvailable();
-        } catch (IllegalStateException notLoadedYet) {
+        } catch (RuntimeException notLoadedYet) {
+            // JUnit単体環境にはForgeのModListと実Configロードがないため、任意連携試験を飛ばす。
             available = false;
         }
         Assumptions.assumeTrue(
