@@ -8,6 +8,15 @@ import com.syaru.advancedquantumengineering.integration.BigCraftingIntegration;
 import com.syaru.advancedquantumengineering.integration.BigIntegerCapacitySnapshot;
 import com.syaru.advancedquantumengineering.integration.BigIntegerCapacityMath;
 import com.syaru.advancedquantumengineering.integration.BigIntegerStorageProvider;
+import com.syaru.advancedquantumengineering.integration.AQEHostSnapshot;
+import com.syaru.advancedquantumengineering.integration.AQERevisionMetrics;
+import com.syaru.advancedquantumengineering.integration.AQEHostOwnerToken;
+import com.syaru.advancedquantumengineering.integration.AQEHostRegistration;
+import appeng.api.networking.crafting.ICraftingPlan;
+import appeng.api.networking.crafting.ICraftingSubmitResult;
+import appeng.api.networking.crafting.ICraftingRequester;
+import appeng.api.networking.security.IActionSource;
+import appeng.api.networking.IGrid;
 import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -16,6 +25,7 @@ import java.util.Map;
 import java.util.UUID;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
+import net.minecraft.world.level.Level;
 import net.pedroksl.advanced_ae.common.cluster.AdvCraftingCPU;
 import net.pedroksl.advanced_ae.common.cluster.AdvCraftingCPUCluster;
 import net.pedroksl.advanced_ae.common.entities.AdvCraftingBlockEntity;
@@ -55,11 +65,20 @@ public abstract class AdvCraftingCPUClusterMixin implements AQEBigIntegerCpuAcce
     private long remainingStorage;
 
     @Shadow
+    public abstract Level getLevel();
+
+    @Shadow
     @Final
     private HashMap<UUID, AdvCraftingCPU> activeCpus;
 
     @Unique
     private AQEBigCraftingHost aqe$bigHost;
+
+    @Unique
+    private AQEHostRegistration aqe$hostRegistration;
+
+    @Unique
+    private long aqe$hostGeneration;
 
     @Unique
     private BigInteger aqe$physicalCapacity = BigInteger.ZERO;
@@ -83,6 +102,45 @@ public abstract class AdvCraftingCPUClusterMixin implements AQEBigIntegerCpuAcce
     private BigIntegerCapacitySnapshot aqe$displaySnapshot = BigIntegerCapacitySnapshot.zero();
 
     @Unique
+    private long aqe$structureRevision = 1L;
+
+    @Unique
+    private long aqe$activeCpuRevision = 1L;
+
+    @Unique
+    private long aqe$hostRevision = 1L;
+
+    @Unique
+    private long aqe$cachedStructureRevision;
+
+    @Unique
+    private long aqe$reconciledStructureRevision;
+
+    @Unique
+    private long aqe$reconciledCpuRevision;
+
+    @Unique
+    private boolean aqe$structureDirty = true;
+
+    @Unique
+    private BigInteger aqe$cachedStorageContributions = BigInteger.ZERO;
+
+    @Unique
+    private BigInteger aqe$cachedStorageMultipliers = BigInteger.ZERO;
+
+    @Unique
+    private BigInteger aqe$cachedPhysicalCapacity = BigInteger.ZERO;
+
+    @Unique
+    private long aqe$cachedEffectiveCoprocessors;
+
+    @Unique
+    private boolean aqe$cachedHasBigCore;
+
+    @Unique
+    private AQEHostSnapshot aqe$latestHostSnapshot;
+
+    @Unique
     private boolean aqe$reportedOverbookedDisplayLedger;
 
     @ModifyConstant(method = "addBlockEntity", constant = @Constant(intValue = 16))
@@ -94,8 +152,8 @@ public abstract class AdvCraftingCPUClusterMixin implements AQEBigIntegerCpuAcce
     private void advancedQuantumEngineering$repairOverflowedState(
             AdvCraftingBlockEntity blockEntity,
             CallbackInfo ci) {
-        advancedQuantumEngineering$recalculateCoprocessorState();
-        advancedQuantumEngineering$recalculateStorageState();
+        // 構造が変わった時だけ次回の読み取りで全ブロックを再走査する。
+        advancedQuantumEngineering$markStructureDirty();
     }
 
     @Inject(method = "getCoProcessors", at = @At("HEAD"), cancellable = true)
@@ -121,48 +179,60 @@ public abstract class AdvCraftingCPUClusterMixin implements AQEBigIntegerCpuAcce
 
     @Inject(method = "readFromNBT", at = @At("RETURN"))
     private void advancedQuantumEngineering$loadBigIntegerHost(CompoundTag data, CallbackInfo ci) {
+        // NBT復元後は構造値とCPU予約を同じ世代から再計算する。
+        advancedQuantumEngineering$markStructureDirty();
+        advancedQuantumEngineering$markActiveCpuDirty();
         CompoundTag saved = data.contains(AQE_BIG_HOST_NBT, Tag.TAG_COMPOUND)
                 ? data.getCompound(AQE_BIG_HOST_NBT).copy()
                 : new CompoundTag();
-        if (aqe$bigHost != null) {
-            aqe$bigHost.close();
-        }
-        aqe$bigHost = BigCraftingIntegration.createHost(this, aqe$calculatePhysicalCapacity(), saved);
+        advancedQuantumEngineering$replaceHost(saved, aqe$calculatePhysicalCapacity());
         advancedQuantumEngineering$recalculateStorageState();
+    }
+
+    @Inject(method = "destroy", at = @At("HEAD"))
+    private void advancedQuantumEngineering$closeHostOnDestroy(CallbackInfo ci) {
+        advancedQuantumEngineering$closeHost();
+    }
+
+    @Inject(method = "breakCluster", at = @At("HEAD"))
+    private void advancedQuantumEngineering$closeHostOnBreak(CallbackInfo ci) {
+        advancedQuantumEngineering$closeHost();
     }
 
     @Override
     public boolean aqe$hasBigIntegerQuantumCore() {
-        for (AdvCraftingBlockEntity blockEntity : blockEntities) {
-            if (blockEntity instanceof BigIntegerStorageProvider) {
-                return true;
-            }
-        }
-        return false;
+        advancedQuantumEngineering$ensureStructureAggregates();
+        return aqe$cachedHasBigCore;
     }
 
     @Override
     public BigInteger aqe$getPhysicalCraftingCapacity() {
-        return aqe$physicalCapacity;
+        advancedQuantumEngineering$ensureStructureAggregates();
+        return aqe$cachedPhysicalCapacity;
     }
 
     @Override
     public BigInteger aqe$getReservedCraftingCapacity() {
-        AQEBigCraftingHost host = aqe$bigHost;
-        return host == null ? BigInteger.ZERO : host.reserved();
+        advancedQuantumEngineering$recalculateStorageState();
+        return aqe$latestHostSnapshot == null
+                ? BigInteger.ZERO
+                : aqe$latestHostSnapshot.reserved();
     }
 
     @Override
     public BigInteger aqe$getAvailableCraftingCapacity() {
-        AQEBigCraftingHost host = aqe$bigHost;
-        return host == null ? aqe$availableCapacity : host.available();
+        advancedQuantumEngineering$recalculateStorageState();
+        return aqe$latestHostSnapshot == null
+                ? aqe$availableCapacity
+                : aqe$latestHostSnapshot.available();
     }
 
     @Override
     public synchronized BigIntegerCapacitySnapshot aqe$getCapacityDisplaySnapshot() {
-        AQEBigCraftingHost host = aqe$bigHost;
-        BigInteger total = aqe$physicalCapacity;
-        BigInteger reserved = host == null ? BigInteger.ZERO : host.reserved();
+        advancedQuantumEngineering$recalculateStorageState();
+        AQEHostSnapshot hostSnapshot = aqe$latestHostSnapshot;
+        BigInteger total = hostSnapshot == null ? aqe$physicalCapacity : hostSnapshot.physicalCapacity();
+        BigInteger reserved = hostSnapshot == null ? BigInteger.ZERO : hostSnapshot.reserved();
         BigInteger used = reserved;
         // 一度取得した使用中容量から空きを導出し、三値が別時点になる競合を避ける。
         BigInteger available = total.subtract(used);
@@ -177,16 +247,16 @@ public abstract class AdvCraftingCPUClusterMixin implements AQEBigIntegerCpuAcce
                         "AQE capacity display detected reservations above physical capacity: total={}, reserved={}, backend={}",
                         total,
                         used,
-                        host == null ? "aqe:uninitialized" : host.backendId());
+                        hostSnapshot == null ? "aqe:uninitialized" : hostSnapshot.backendState());
             }
             used = total;
             available = BigInteger.ZERO;
         }
-        int bigJobs = host == null ? 0 : Math.max(0, host.bigJobCount());
-        int managedChildren = host == null ? 0 : Math.max(0, host.managedChildJobCount());
+        long standardJobsLong = hostSnapshot == null ? activeCpus.size() : hostSnapshot.standardJobCount();
+        long bigJobsLong = hostSnapshot == null ? 0L : hostSnapshot.bigJobCount();
+        int bigJobs = clampDisplayCount(bigJobsLong);
         // ACO子WindowはBig親Jobの内部実装なので、通常Job件数との二重表示から除外する。
-        int standardJobs = Math.max(0, activeCpus.size() - Math.min(activeCpus.size(), managedChildren));
-        long combinedJobs = (long) standardJobs + bigJobs;
+        long combinedJobs = safeDisplayAdd(Math.max(0L, standardJobsLong), bigJobsLong);
         // 異常な外部Backend件数でも表示用intをoverflowさせず、容量会計には影響させない。
         int activeJobs = combinedJobs >= Integer.MAX_VALUE
                 ? Integer.MAX_VALUE
@@ -204,6 +274,9 @@ public abstract class AdvCraftingCPUClusterMixin implements AQEBigIntegerCpuAcce
             aqe$displayUsed = reserved;
             aqe$displayActiveJobs = activeJobs;
             aqe$displayBigJobs = bigJobs;
+        } else {
+            // 同じRevisionの表示値はBigIntegerの文字列化を繰り返さない。
+            AQERevisionMetrics.recordPresentationReuse();
         }
         return aqe$displaySnapshot;
     }
@@ -216,43 +289,86 @@ public abstract class AdvCraftingCPUClusterMixin implements AQEBigIntegerCpuAcce
 
     @Unique
     private void advancedQuantumEngineering$recalculateStorageState() {
-        BigInteger physicalCapacity = aqe$calculatePhysicalCapacity();
-        Map<UUID, BigInteger> reservations = new LinkedHashMap<>();
-        for (var entry : activeCpus.entrySet()) {
-            AdvCraftingCPU cpu = entry.getValue();
-            if (cpu != null && cpu.getAvailableStorage() > 0L) {
-                reservations.put(entry.getKey(), BigInteger.valueOf(cpu.getAvailableStorage()));
-            }
-        }
+        advancedQuantumEngineering$ensureStructureAggregates();
+        BigInteger physicalCapacity = aqe$cachedPhysicalCapacity;
 
         if (aqe$bigHost == null) {
-            aqe$bigHost = BigCraftingIntegration.createHost(this, physicalCapacity, new CompoundTag());
+            advancedQuantumEngineering$replaceHost(new CompoundTag(), physicalCapacity);
         }
-        aqe$bigHost.reconcile(physicalCapacity, reservations);
-
-        BigInteger summedStorage = aqe$sumStorageContributions();
-        BigInteger summedMultiplier = aqe$sumStorageMultipliers();
+        if (aqe$reconciledStructureRevision != aqe$structureRevision
+                || aqe$reconciledCpuRevision != aqe$activeCpuRevision) {
+            Map<UUID, BigInteger> reservations = new LinkedHashMap<>();
+            for (var entry : activeCpus.entrySet()) {
+                AdvCraftingCPU cpu = entry.getValue();
+                if (cpu != null && cpu.getAvailableStorage() > 0L) {
+                    reservations.put(entry.getKey(), BigInteger.valueOf(cpu.getAvailableStorage()));
+                }
+            }
+            aqe$bigHost.reconcile(physicalCapacity, reservations);
+            aqe$reconciledStructureRevision = aqe$structureRevision;
+            aqe$reconciledCpuRevision = aqe$activeCpuRevision;
+            aqe$hostRevision = nextRevision(aqe$hostRevision);
+            AQERevisionMetrics.recordReservationRebuild();
+            AQERevisionMetrics.recordHostReconcile();
+        }
         this.storage = BigIntegerCapacityMath.saturatedLong(
-                summedStorage, AQEConfig.MAX_BIG_INTEGER_BITS);
+                aqe$cachedStorageContributions, AQEConfig.MAX_BIG_INTEGER_BITS);
         this.storageMultiplier = BigIntegerCapacityMath.saturatedLong(
-                summedMultiplier, AQEConfig.MAX_BIG_INTEGER_BITS);
-        this.remainingStorage = aqe$bigHost.availableAsSaturatedLong();
-        this.aqe$physicalCapacity = physicalCapacity;
-        this.aqe$availableCapacity = aqe$bigHost.available();
+                aqe$cachedStorageMultipliers, AQEConfig.MAX_BIG_INTEGER_BITS);
+        AQERevisionMetrics.recordHostSnapshotRead();
+        aqe$latestHostSnapshot = aqe$bigHost.snapshot(aqe$hostRevision);
+        this.remainingStorage = BigIntegerCapacityMath.saturatedLong(
+                aqe$latestHostSnapshot.available(), AQEConfig.MAX_BIG_INTEGER_BITS);
+        this.aqe$physicalCapacity = aqe$latestHostSnapshot.physicalCapacity();
+        this.aqe$availableCapacity = aqe$latestHostSnapshot.available();
+    }
+
+    @Unique
+    private synchronized void advancedQuantumEngineering$replaceHost(
+            CompoundTag savedState,
+            BigInteger physicalCapacity) {
+        AQEHostOwnerToken owner = new AQEHostOwnerToken(
+                ++aqe$hostGeneration,
+                advancedQuantumEngineering$lifecycleOwner());
+        AQEBigCraftingHost replacement = BigCraftingIntegration.createHost(
+                owner,
+                this,
+                physicalCapacity,
+                savedState);
+        AQEHostRegistration replacementRegistration = AQEHostRegistration.open(owner, replacement);
+        AQEHostRegistration previousRegistration = aqe$hostRegistration;
+        aqe$bigHost = replacement;
+        aqe$hostRegistration = replacementRegistration;
+        if (previousRegistration != null) {
+            previousRegistration.closeForReplacement();
+        }
+    }
+
+    @Unique
+    private synchronized void advancedQuantumEngineering$closeHost() {
+        AQEHostRegistration registration = aqe$hostRegistration;
+        aqe$hostRegistration = null;
+        aqe$bigHost = null;
+        if (registration != null) {
+            registration.close();
+        }
+    }
+
+    @Unique
+    private Level advancedQuantumEngineering$lifecycleOwner() {
+        if (!blockEntities.isEmpty()) {
+            Level level = blockEntities.get(0).getLevel();
+            if (level != null) {
+                return level;
+            }
+        }
+        return getLevel();
     }
 
     @Unique
     private BigInteger aqe$calculatePhysicalCapacity() {
-        BigInteger storageTotal = aqe$sumStorageContributions();
-        BigInteger multiplierTotal = aqe$sumStorageMultipliers();
-        if (multiplierTotal.signum() > 0) {
-            storageTotal = BigIntegerCapacityMath.multiply(
-                    storageTotal,
-                    multiplierTotal,
-                    "AQE effective storage",
-                    AQEConfig.MAX_BIG_INTEGER_BITS);
-        }
-        return storageTotal;
+        advancedQuantumEngineering$ensureStructureAggregates();
+        return aqe$cachedPhysicalCapacity;
     }
 
     @Unique
@@ -292,25 +408,132 @@ public abstract class AdvCraftingCPUClusterMixin implements AQEBigIntegerCpuAcce
 
     @Unique
     private long advancedQuantumEngineering$recalculateCoprocessorState() {
+        advancedQuantumEngineering$ensureStructureAggregates();
+        return aqe$cachedEffectiveCoprocessors;
+    }
+
+    @Unique
+    private synchronized void advancedQuantumEngineering$markStructureDirty() {
+        // 構造世代を進め、次の参照時だけ容量・加速器を再集計する。
+        aqe$structureRevision = nextRevision(aqe$structureRevision);
+        aqe$structureDirty = true;
+    }
+
+    @Unique
+    private synchronized void advancedQuantumEngineering$markActiveCpuDirty() {
+        // CPUの追加・取消後に予約Ledgerを再構築させる。
+        aqe$activeCpuRevision = nextRevision(aqe$activeCpuRevision);
+    }
+
+    @Unique
+    private synchronized void advancedQuantumEngineering$ensureStructureAggregates() {
+        // 構造世代が同じなら、巨大マルチブロックを毎GUI更新で走査しない。
+        if (!aqe$structureDirty && aqe$cachedStructureRevision == aqe$structureRevision) {
+            AQERevisionMetrics.recordCoprocessorHotPathReuse();
+            return;
+        }
+
+        BigInteger storageTotal = BigInteger.ZERO;
+        BigInteger multiplierTotal = BigInteger.ZERO;
         long summedAccelerators = 0L;
         long summedMultipliers = 0L;
+        boolean hasBigCore = false;
         for (AdvCraftingBlockEntity blockEntity : this.blockEntities) {
+            hasBigCore |= blockEntity instanceof BigIntegerStorageProvider;
+            BigInteger contribution = blockEntity instanceof BigIntegerStorageProvider provider
+                    ? provider.getBigIntegerStorageBytes()
+                    : BigInteger.valueOf(Math.max(0L, blockEntity.getStorageBytes()));
+            storageTotal = BigIntegerCapacityMath.add(
+                    storageTotal,
+                    BigIntegerCapacityMath.checkedNonNegative(
+                            contribution,
+                            "AQE storage contribution",
+                            AQEConfig.MAX_BIG_INTEGER_BITS),
+                    "AQE summed storage",
+                    AQEConfig.MAX_BIG_INTEGER_BITS);
+            int multiplier = Math.max(0, blockEntity.getStorageMultiplier());
+            if (multiplier > 0) {
+                multiplierTotal = BigIntegerCapacityMath.add(
+                        multiplierTotal,
+                        BigInteger.valueOf(multiplier),
+                        "AQE summed storage multiplier",
+                        AQEConfig.MAX_BIG_INTEGER_BITS);
+            }
             summedAccelerators = safeAddCoprocessors(
-                    summedAccelerators,
-                    Math.max(0L, blockEntity.getAcceleratorThreads()));
+                    summedAccelerators, Math.max(0L, blockEntity.getAcceleratorThreads()));
             summedMultipliers = safeAddCoprocessors(
-                    summedMultipliers,
-                    Math.max(0L, blockEntity.getAccelerationMultiplier()));
+                    summedMultipliers, Math.max(0L, blockEntity.getAccelerationMultiplier()));
         }
-
+        BigInteger physical = multiplierTotal.signum() > 0
+                ? BigIntegerCapacityMath.multiply(
+                        storageTotal,
+                        multiplierTotal,
+                        "AQE effective storage",
+                        AQEConfig.MAX_BIG_INTEGER_BITS)
+                : storageTotal;
+        long effective = summedMultipliers > 0L
+                ? safeMultiplyCoprocessors(summedAccelerators, summedMultipliers)
+                : summedAccelerators;
         this.accelerator = (int) summedAccelerators;
         this.acceleratorMultiplier = (int) summedMultipliers;
+        aqe$cachedStorageContributions = storageTotal;
+        aqe$cachedStorageMultipliers = multiplierTotal;
+        aqe$cachedPhysicalCapacity = physical;
+        aqe$cachedEffectiveCoprocessors = effective;
+        aqe$cachedHasBigCore = hasBigCore;
+        aqe$cachedStructureRevision = aqe$structureRevision;
+        aqe$structureDirty = false;
+        AQERevisionMetrics.recordStructureScan();
+    }
 
-        long effective = summedAccelerators;
-        if (summedMultipliers > 0L) {
-            effective = safeMultiplyCoprocessors(effective, summedMultipliers);
+    @Unique
+    private static long nextRevision(long revision) {
+        // 最大値到達時も0を予約値にせず、1へ戻して世代の無効値を作らない。
+        return revision == Long.MAX_VALUE ? 1L : revision + 1L;
+    }
+
+    @Unique
+    private static int clampDisplayCount(long value) {
+        // GUIの件数だけをintへ収め、BigInteger容量や予約Ledgerは変更しない。
+        return value >= Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) Math.max(0L, value);
+    }
+
+    @Unique
+    private static long safeDisplayAdd(long left, long right) {
+        // 表示用ジョブ件数の加算だけを飽和させ、実ジョブの会計は飽和させない。
+        if (left > Long.MAX_VALUE - right) {
+            return Long.MAX_VALUE;
         }
-        return effective;
+        return left + right;
+    }
+
+    @Inject(method = "submitJob", at = @At("TAIL"), require = 0)
+    private void advancedQuantumEngineering$markCpuAdded(
+            IGrid grid,
+            ICraftingPlan plan,
+            IActionSource source,
+            ICraftingRequester requester,
+            CallbackInfoReturnable<ICraftingSubmitResult> cir) {
+        // 新しいCPU予約が追加されたため、次回の容量参照でだけReservationを再構築する。
+        advancedQuantumEngineering$markActiveCpuDirty();
+    }
+
+    @Inject(method = "cancelJobs", at = @At("TAIL"), require = 0)
+    private void advancedQuantumEngineering$markAllCpusChanged(CallbackInfo ci) {
+        // 一括取消は複数CPUを変えるため、予約世代を一度だけ進める。
+        advancedQuantumEngineering$markActiveCpuDirty();
+    }
+
+    @Inject(method = "cancelJob", at = @At("TAIL"), require = 0)
+    private void advancedQuantumEngineering$markCpuCancelled(UUID jobId, CallbackInfo ci) {
+        // 個別取消後の空き容量を次回参照へ反映する。
+        advancedQuantumEngineering$markActiveCpuDirty();
+    }
+
+    @Inject(method = "deactivate", at = @At("TAIL"), require = 0)
+    private void advancedQuantumEngineering$markCpuDeactivated(UUID jobId, CallbackInfo ci) {
+        // 完了・停止でCPUが非アクティブになった場合もReservationを再計算する。
+        advancedQuantumEngineering$markActiveCpuDirty();
     }
 
     @Unique

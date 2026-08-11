@@ -79,29 +79,41 @@ public final class BigCraftingIntegration {
     }
 
     public static AQEBigCraftingHost createHost(
-            Object owner,
+            Object lifecycleOwner,
+            Object backendRegistryOwner,
             BigInteger physicalCapacity,
             CompoundTag savedState) {
-        initialize();
-        Objects.requireNonNull(owner, "owner");
+        Objects.requireNonNull(lifecycleOwner, "lifecycleOwner");
+        Objects.requireNonNull(backendRegistryOwner, "backendRegistryOwner");
         Objects.requireNonNull(physicalCapacity, "physicalCapacity");
         CompoundTag safeSaved = savedState == null ? new CompoundTag() : savedState.copy();
         try {
-            if (acoBackendSelected && !backend.isAvailable()) {
-                return new LocalBigCraftingHost(physicalCapacity, safeSaved);
+            // Keep fail-fast initialization inside the restore boundary so a
+            // bad optional API cannot abort a block entity carrying opaque NBT.
+            initialize();
+            if (!safeSaved.isEmpty() && (!acoBackendSelected || !backend.isAvailable())) {
+                return pausedHost(
+                        physicalCapacity,
+                        safeSaved,
+                        acoBackendSelected
+                                ? PausedOpaqueBigCraftingHost.FailureCategory.BACKEND_DISABLED
+                                : PausedOpaqueBigCraftingHost.FailureCategory.ACO_ABSENT);
             }
-            return backend.create(owner, physicalCapacity, safeSaved);
+            return backend.create(
+                    lifecycleOwner,
+                    backendRegistryOwner,
+                    physicalCapacity,
+                    safeSaved);
         } catch (RuntimeException | LinkageError failure) {
-            if (AQEConfig.failFastOnIntegrationMismatch()) {
-                throw new IllegalStateException(
-                        "Failed to restore AQE's optional BigInteger crafting backend. "
-                                + "The saved state was not discarded.",
-                        failure);
-            }
             AdvancedQuantumEngineering.LOGGER.error(
-                    "Optional BigInteger backend failed; preserving its state in long fallback",
+                    "Optional BigInteger backend failed; preserving its state in PAUSED opaque host",
                     failure);
-            return new LocalBigCraftingHost(physicalCapacity, safeSaved);
+            return pausedHost(
+                    physicalCapacity,
+                    safeSaved,
+                    failure instanceof LinkageError
+                            ? PausedOpaqueBigCraftingHost.FailureCategory.LINKAGE_ERROR
+                            : PausedOpaqueBigCraftingHost.FailureCategory.RUNTIME_RESTORE_FAILURE);
         }
     }
 
@@ -130,6 +142,17 @@ public final class BigCraftingIntegration {
         }
     }
 
+    private static AQEBigCraftingHost pausedHost(
+            BigInteger physicalCapacity,
+            CompoundTag payload,
+            PausedOpaqueBigCraftingHost.FailureCategory category) {
+        AdvancedQuantumEngineering.LOGGER.error(
+                "AQE host paused as {} while preserving opaque backend payload (backend={})",
+                category,
+                AQEBigCraftingHostState.safeBackendHint(payload));
+        return new PausedOpaqueBigCraftingHost(physicalCapacity, payload, category);
+    }
+
     private static final class LocalBackend implements AQEBigCraftingBackend {
         @Override
         public boolean isAvailable() {
@@ -143,7 +166,8 @@ public final class BigCraftingIntegration {
 
         @Override
         public AQEBigCraftingHost create(
-                Object owner,
+                Object lifecycleOwner,
+                Object backendRegistryOwner,
                 BigInteger physicalCapacity,
                 CompoundTag savedState) {
             return new LocalBigCraftingHost(physicalCapacity, savedState);

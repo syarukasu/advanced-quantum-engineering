@@ -2,7 +2,7 @@
 
 Advanced Quantum Engineering 2.2.3 adds upgraded Advanced AE Quantum Computer parts that use the original Quantum Computer multiblock system.
 
-This mod targets Minecraft 1.20.1, Forge 47.4.18+, Java 17, upstream Applied Energistics 2 15.4.10 or the verified AE2-UELM replacement 15.5.0-uelm, Advanced AE 1.3.5-1.20.1, and AE2 Omni Cells 1.1.6. The persistent branch is `mc/1.20.1`, and its artifact is named `aqe<version>_1.20.1.jar`. The NeoForge 1.21.1 line is maintained independently on `mc/1.21.1`.
+This mod targets Minecraft 1.20.1, Forge 47.4.18+, Java 17, upstream Applied Energistics 2 15.4.10 or the verified AE2-UELM replacement 15.5.0-uelm, Advanced AE 1.3.5-1.20.1 or 1.3.6-1.20.1, and AE2 Omni Cells 1.1.6. The persistent branch is `mc/1.20.1`, and its artifact is named `aqe<version>_1.20.1.jar`. The NeoForge 1.21.1 line is maintained independently on `mc/1.21.1`.
 
 AE2 crafting and synchronization optimization code is intentionally not part of this mod. It lives in the separate `ae2-crafting-optimizer` project so Quantum Computer block behavior and AE2 optimization behavior can be tested independently. Compatible ACO 1.3.x through 1.5.x releases are optional: AQE runs without ACO and uses its versioned BigInteger host API when it is present and enabled.
 
@@ -168,7 +168,7 @@ Run:
 gradlew.bat clean build
 ```
 
-The generated jar is written under `build/libs/advanced-quantum-engineering-2.2.0.jar`.
+The generated jar is written under `build/libs/aqe2.2.5_1.20.1.jar`.
 
 When cloning outside the original Prism instance, either recreate the expected local `mods` folder layout or replace the dependency coordinates in `build.gradle` with public Maven coordinates.
 

@@ -160,13 +160,13 @@ and Data Entangler multiplication.
 
 Run every case on a copied world before enabling experimental ACO execution paths. Do not treat `gradlew test` alone as full runtime qualification.
 
-1. AQE 2.2.0 without ACO:
+1. AQE 2.2.4 without ACO on Forge 1.20.1 / Advanced AE 1.3.5 or 1.3.6 / AE2 15.4.10:
    - client and dedicated server start;
    - BigInteger core forms the original Advanced AE structure;
    - multiple standard crafting jobs run concurrently;
    - save/restart restores every job and exact remaining capacity;
    - tooltip reports the local long-compatible backend.
-2. AQE 2.2.0 with compatible ACO 1.4.x or 1.5.x on both sides:
+2. AQE 2.2.4 with the tested ACO 1.5.11 release on both sides:
    - startup logs report `aco:big_crafting_v3`;
    - normal jobs and ACO-native reservations share one capacity;
    - a deterministic individual-long-overflow plan is retained as one parent
@@ -185,7 +185,7 @@ Run every case on a copied world before enabling experimental ACO execution path
    - opaque state remains in `aqeBigCraftingHost`;
    - paused reservation remains unavailable to standard jobs;
    - no item or job is silently completed, cancelled, or deleted.
-4. Reinstall compatible ACO `[1.3.0,1.6.0)`:
+4. Reinstall the tested compatible ACO `1.5.11`:
    - the preserved state restores;
    - standard reservations are reconciled from Advanced AE;
    - no reservation is counted twice.
@@ -193,7 +193,7 @@ Run every case on a copied world before enabling experimental ACO execution path
    - default diagnostics fail with an explicit compatibility message;
    - no saved payload is overwritten.
 
-Automated tests cover checked capacity arithmetic, malformed/canonical NBT, local fallback preservation, optional API reflection, shared host reservations, and host save/load. They do not replace Forge/Arclight startup, transformed-Mixin, in-world structure, multiplayer, or crash-recovery tests.
+Automated tests cover checked capacity arithmetic, malformed/canonical NBT, local fallback preservation, optional API reflection, shared host reservations, host save/load, host lifecycle ownership, and the 1.20.1 bytecode contract. They do not replace Forge/Arclight startup, transformed-Mixin, in-world structure, multiplayer, or crash-recovery tests.
 
 ## GameTest
 

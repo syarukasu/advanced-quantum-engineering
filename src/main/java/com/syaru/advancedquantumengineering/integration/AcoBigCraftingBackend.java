@@ -25,10 +25,12 @@ public final class AcoBigCraftingBackend implements AQEBigCraftingBackend {
 
     private final Object keyCodec;
     private final Method isEnabled;
+    private final Method isCalculationProfileActive;
     private final Method createHost;
     private final Method loadHost;
     private final Method register;
     private final Method unregister;
+    private final Method registrationClose;
     private final RuntimeMethods runtimeMethods;
 
     public AcoBigCraftingBackend() throws ReflectiveOperationException {
@@ -52,17 +54,39 @@ public final class AcoBigCraftingBackend implements AQEBigCraftingBackend {
             throw new IllegalStateException("ACO AEKey codec does not implement its advertised API");
         }
         this.isEnabled = apiType.getMethod("isEnabled");
+        // 計算プロファイル照会は新しいACOで追加されたため、古いAPIでは任意メソッドとして扱う。
+        this.isCalculationProfileActive = optionalMethod(apiType, "isCalculationProfileActive");
         this.createHost = apiType.getMethod("createHost", BigInteger.class, keyCodecType);
         this.loadHost = apiType.getMethod(
                 "loadHost", CompoundTag.class, BigInteger.class, keyCodecType);
         this.register = registryType.getMethod("register", Object.class, hostType);
         this.unregister = registryType.getMethod("unregister", Object.class);
+        Class<?> registrationType = Class.forName(
+                "com.syaru.ae2craftingoptimizer.api.big.BigCraftingHostRegistration",
+                false,
+                loader);
+        this.registrationClose = registrationType.getMethod("close");
         this.runtimeMethods = new RuntimeMethods(hostType);
     }
 
     @Override
     public boolean isAvailable() {
-        return (boolean) invoke(isEnabled, null);
+        // サーバー設定でBigInteger機能が無効なら、AQE側もホストを選択しない。
+        if (!(boolean) invoke(isEnabled, null)) {
+            return false;
+        }
+        // 厳密なAE2計算プロファイルが無効なら、long互換経路を二重所有しない。
+        return isCalculationProfileActive == null
+                || (boolean) invoke(isCalculationProfileActive, null);
+    }
+
+    private static Method optionalMethod(Class<?> owner, String name) {
+        try {
+            return owner.getMethod(name);
+        } catch (NoSuchMethodException unsupportedOlderApi) {
+            // 旧ACO APIには照会メソッドがないため、isEnabled()だけで互換判定する。
+            return null;
+        }
     }
 
     @Override
@@ -72,10 +96,12 @@ public final class AcoBigCraftingBackend implements AQEBigCraftingBackend {
 
     @Override
     public AQEBigCraftingHost create(
-            Object owner,
+            Object lifecycleOwner,
+            Object backendRegistryOwner,
             BigInteger physicalCapacity,
             CompoundTag savedState) {
-        Objects.requireNonNull(owner, "owner");
+        Objects.requireNonNull(lifecycleOwner, "lifecycleOwner");
+        Objects.requireNonNull(backendRegistryOwner, "backendRegistryOwner");
         Object runtime;
         if (AQEBigCraftingHostState.isPresent(savedState)) {
             AQEBigCraftingHostState.Decoded decoded = AQEBigCraftingHostState.decode(savedState);
@@ -87,8 +113,31 @@ public final class AcoBigCraftingBackend implements AQEBigCraftingBackend {
         } else {
             runtime = invoke(createHost, null, physicalCapacity, keyCodec);
         }
-        invoke(register, null, owner, runtime);
-        return new Host(owner, runtime, unregister, runtimeMethods);
+        /*
+         * ACO looks up a host with AdvCraftingCPUCluster identity during
+         * submitJob. Register under that real cluster object rather than the
+         * AQE generation token used by AQE's separate lifecycle registry.
+         */
+        Object registration = invoke(register, null, backendRegistryOwner, runtime);
+        return new Host(
+                lifecycleOwner,
+                backendRegistryOwner,
+                runtime,
+                registration,
+                registrationClose,
+                unregister,
+                runtimeMethods);
+    }
+
+    /**
+     * Keeps the pre-owner-split test and integration call shape working.
+     * Older callers used one identity for both lifecycle and ACO lookup.
+     */
+    public AQEBigCraftingHost create(
+            Object owner,
+            BigInteger physicalCapacity,
+            CompoundTag savedState) {
+        return create(owner, owner, physicalCapacity, savedState);
     }
 
     private static Object invoke(Method method, Object target, Object... arguments) {
@@ -145,14 +194,27 @@ public final class AcoBigCraftingBackend implements AQEBigCraftingBackend {
 
     private static final class Host implements AQEBigCraftingHost {
         private final Object owner;
+        private final Object backendRegistryOwner;
         private final Object runtime;
+        private final Object registration;
+        private final Method registrationClose;
         private final Method unregister;
         private final RuntimeMethods methods;
         private boolean closed;
 
-        private Host(Object owner, Object runtime, Method unregister, RuntimeMethods methods) {
+        private Host(
+                Object owner,
+                Object backendRegistryOwner,
+                Object runtime,
+                Object registration,
+                Method registrationClose,
+                Method unregister,
+                RuntimeMethods methods) {
             this.owner = owner;
+            this.backendRegistryOwner = backendRegistryOwner;
             this.runtime = runtime;
+            this.registration = registration;
+            this.registrationClose = registrationClose;
             this.unregister = unregister;
             this.methods = methods;
         }
@@ -170,31 +232,26 @@ public final class AcoBigCraftingBackend implements AQEBigCraftingBackend {
 
         @Override
         public BigInteger physicalCapacity() {
-            ensureOpen();
             return (BigInteger) invoke(methods.physicalCapacity(), runtime);
         }
 
         @Override
         public BigInteger reserved() {
-            ensureOpen();
             return (BigInteger) invoke(methods.reserved(), runtime);
         }
 
         @Override
         public BigInteger available() {
-            ensureOpen();
             return (BigInteger) invoke(methods.available(), runtime);
         }
 
         @Override
         public long availableAsSaturatedLong() {
-            ensureOpen();
             return ((Number) invoke(methods.availableAsSaturatedLong(), runtime)).longValue();
         }
 
         @Override
         public int bigJobCount() {
-            ensureOpen();
             Method method = methods.bigJobCount();
             // 古いACO API v3では件数同期を持たないため、容量機能を維持して0件表示にする。
             return method == null ? 0 : ((Number) invoke(method, runtime)).intValue();
@@ -202,7 +259,6 @@ public final class AcoBigCraftingBackend implements AQEBigCraftingBackend {
 
         @Override
         public int managedChildJobCount() {
-            ensureOpen();
             Method method = methods.managedChildJobCount();
             // 子Window件数も任意拡張なので、旧Backendでは通常Jobとの区別を行わない。
             return method == null ? 0 : ((Number) invoke(method, runtime)).intValue();
@@ -220,7 +276,7 @@ public final class AcoBigCraftingBackend implements AQEBigCraftingBackend {
 
         @Override
         public CompoundTag save() {
-            ensureOpen();
+            // ACO Runtimeはclose後も読み取りとNBT保存を保証するため、最終World保存を許可する。
             synchronized (runtime) {
                 return AQEBigCraftingHostState.encode(
                         backendId(),
@@ -232,7 +288,12 @@ public final class AcoBigCraftingBackend implements AQEBigCraftingBackend {
         @Override
         public synchronized void close() {
             if (!closed) {
-                invoke(unregister, null, owner);
+                if (registration != null) {
+                    invoke(registrationClose, registration);
+                } else {
+                    // Compatibility with an older API that returned void from register.
+                    invoke(unregister, null, backendRegistryOwner);
+                }
                 closed = true;
             }
         }

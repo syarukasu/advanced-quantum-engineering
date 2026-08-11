@@ -101,7 +101,7 @@ The same Mixin injects at the head of `AdvCraftingCPUCluster.recalculateRemainin
 
 It also injects at the head of `AdvCraftingCPUCluster.getCoProcessors()` and returns a long-calculated, clamped value. This prevents Advanced AE's `accelerator * acceleratorMultiplier` int multiplication from overflowing when the experimental core is combined with a Multi-Threader. The clamp is `Integer.MAX_VALUE - 1`, which lets AE2 add one execution slot without overflowing.
 
-`TooltipsMixin` injects at the head of AE2's `Tooltips.getByteAmount(long)` only for values at or above one TiB. AE2 15.4.10's byte divisor table stops before TiB-scale values, while Advanced AE's CPU selection tooltip calls `Tooltips.ofBytes` for CPU storage. The mixin returns a normal `Tooltips.Amount` using T/P/E units, so very large AQE CPU values render without changing actual storage or crafting behavior.
+`TooltipsMixin` injects at the head of AE2 15.4.10's `Tooltips.getByteAmount(long)` only for values at or above one TiB. The byte divisor table stops before the scale used by the AQE CPU, while Advanced AE 1.3.5's CPU selection tooltip calls `Tooltips.ofBytes` for CPU storage. The mixin returns a normal `Tooltips.Amount` using T/P/E units, so very large AQE CPU values render without changing actual storage or crafting behavior.
 
 `AdvCraftingCPUNameMixin` and `CraftConfirmMenuMixin` attach a display-only capacity snapshot to AE2's existing synchronized CPU-name component. The snapshot comes from the Quantum Computer host Ledger and contains physical, reserved, and available capacity summaries. Each value carries its decimal digit count and at most 19 leading digits. This keeps the marker length fixed instead of serializing a complete value that may contain 16,384 digits. The client list and confirmation Mixins only format this snapshot; they never feed it back into capacity reservation or crafting decisions. A malformed or missing marker falls back to the original AE2/Advanced AE display.
 
@@ -114,13 +114,13 @@ AQE does not require ACO in Gradle or `mods.toml`. The `ae2_crafting_optimizer` 
 `BigCraftingIntegration` selects one of two implementations:
 
 - `LocalBigCraftingHost`: exact aggregate capacity and standard Advanced AE job reservations; opaque ACO state remains paused and reserved.
-- `AcoBigCraftingBackend`: a reflection-only adapter for compatible ACO `[1.3.0,1.6.0)` API v3 releases. It creates or loads an ACO `BigCraftingHostRuntime`, registers it by the owning Quantum Computer cluster, and shares capacity between standard and native BigInteger reservations.
+- `AcoBigCraftingBackend`: a reflection-only adapter for the tested ACO 1.5.11 API v3 release. It creates or loads an ACO `BigCraftingHostRuntime`, stores the returned `BigCraftingHostRegistration` handle, and shares capacity between standard and native BigInteger reservations.
 
-ACO 1.5 exposes a concrete AE2 `CraftingPlan` facade and keeps exact plan and
-inventory values in ACO-owned sidecars. AQE does not inspect those internal
-sidecars. The registered API v3 host remains the only integration boundary, so
-ACO can change its AE2 compatibility implementation without introducing a
-production class dependency in AQE.
+ACO keeps exact plan and inventory values in ACO-owned sidecars. AQE does not
+inspect those internal sidecars. The registered API v3 host and its explicit
+lifecycle handle remain the only integration boundary, so ACO can change its
+AE2 compatibility implementation without introducing a production class
+dependency in AQE.
 
 Capacity reconciliation and NBT snapshot creation lock the same ACO runtime monitor, so a scheduler cannot observe a half-updated capacity or save a payload with a mismatched reservation summary. Removing ACO does not delete its payload. Reinstalling the compatible backend restores it and then replaces persisted standard reservations with Advanced AE's authoritative active-job map.
 
@@ -137,6 +137,25 @@ exist. AQE subtracts managed child windows from `activeCpus` before adding the
 BigInteger parent count to its display snapshot. Earlier API v3 builds remain
 loadable and report zero optional counts.
 
+## Contract and Lifecycle Checks
+
+The versioned contracts are stored in `docs/contracts/1.20.1.json` and
+`docs/contracts/1.21.1.json`. The 1.20.1 test reads the actual Advanced AE,
+AE2, and Minecraft dependency classes and verifies method descriptors, shadowed
+field types, the single `16` thread-guard constant, and the tooltip target.
+Startup diagnostics repeat the critical method/field checks, require the
+cluster Mixin to be applied before state changes, and reject untested runtime
+dependency versions. The 1.20.1 metadata range is therefore limited to the
+versions represented by the manifest.
+
+Host ownership is generation-scoped. A reform creates and registers the new
+ACO host with a fresh owner token before closing the old registration handle;
+destroy, break, level unload, and server stop all close the active generation.
+Pending state is quarantined when a host cannot be saved during teardown.
+
 ## Known Risk
 
-The cluster Mixin targets Advanced AE 1.3.5 bytecode by method name. If Advanced AE changes `AdvCraftingCPUCluster.addBlockEntity`, this mod should fail loudly rather than silently becoming a fake visual block. Startup diagnostics also check that the expected method still exists and that AQE blocks still expose the intended Advanced AE unit roles. The tooltip Mixin targets AE2 15.4.10's public `Tooltips.getByteAmount(long)` method and should be retested after AE2 updates.
+The cluster Mixin targets Advanced AE 1.3.5 bytecode and AE2 15.4.10's
+public tooltip method. If either dependency changes its descriptors, field types,
+or guard constant, the bytecode contract and fail-fast startup diagnostics stop
+the addon rather than silently producing a fake or unsafe Quantum Computer.
