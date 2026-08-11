@@ -244,31 +244,26 @@ public final class AcoBigCraftingBackend implements AQEBigCraftingBackend {
 
         @Override
         public BigInteger physicalCapacity() {
-            ensureOpen();
             return (BigInteger) invoke(methods.physicalCapacity(), runtime);
         }
 
         @Override
         public BigInteger reserved() {
-            ensureOpen();
             return (BigInteger) invoke(methods.reserved(), runtime);
         }
 
         @Override
         public BigInteger available() {
-            ensureOpen();
             return (BigInteger) invoke(methods.available(), runtime);
         }
 
         @Override
         public long availableAsSaturatedLong() {
-            ensureOpen();
             return ((Number) invoke(methods.availableAsSaturatedLong(), runtime)).longValue();
         }
 
         @Override
         public synchronized AQEHostSnapshot snapshot(long revision) {
-            ensureOpen();
             SnapshotMethods snapshot = methods.snapshot();
             if (snapshot == null) {
                 return AQEBigCraftingHost.super.snapshot(revision);
@@ -289,7 +284,6 @@ public final class AcoBigCraftingBackend implements AQEBigCraftingBackend {
 
         @Override
         public int bigJobCount() {
-            ensureOpen();
             Method method = methods.bigJobCount();
             // 古いACO API v3では件数同期を持たないため、容量機能を維持して0件表示にする。
             return method == null ? 0 : ((Number) invoke(method, runtime)).intValue();
@@ -297,7 +291,6 @@ public final class AcoBigCraftingBackend implements AQEBigCraftingBackend {
 
         @Override
         public int managedChildJobCount() {
-            ensureOpen();
             Method method = methods.managedChildJobCount();
             // 子Window件数も任意拡張なので、旧Backendでは通常Jobとの区別を行わない。
             return method == null ? 0 : ((Number) invoke(method, runtime)).intValue();
@@ -315,7 +308,7 @@ public final class AcoBigCraftingBackend implements AQEBigCraftingBackend {
 
         @Override
         public CompoundTag save() {
-            ensureOpen();
+            // ACO Runtimeはclose後も読み取りとNBT保存を保証するため、最終World保存を許可する。
             synchronized (runtime) {
                 return AQEBigCraftingHostState.encode(
                         backendId(),

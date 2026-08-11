@@ -2,14 +2,21 @@ package com.syaru.advancedquantumengineering.integration;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.electronwill.nightconfig.core.CommentedConfig;
 import java.math.BigInteger;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import net.minecraft.nbt.CompoundTag;
+import net.neoforged.fml.config.ModConfig;
+import net.neoforged.neoforge.common.ModConfigSpec;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 
@@ -64,6 +71,50 @@ class AcoBigCraftingBackendTest {
         restored.close();
     }
 
+    @Test
+    void closedHostRemainsReadableForFinalWorldSave()
+            throws ReflectiveOperationException {
+        loadAcoConfigDefaults();
+        AcoBigCraftingBackend backend = new AcoBigCraftingBackend();
+        Object owner = new Object();
+        BigInteger capacity = BigInteger.TEN.pow(64);
+        BigInteger reservation = BigInteger.TEN.pow(32);
+        AQEBigCraftingHost host = backend.create(owner, capacity, new CompoundTag());
+        host.reconcile(capacity, Map.of(UUID.randomUUID(), reservation));
+        CompoundTag savedBeforeClose = host.save();
+
+        host.close();
+
+        assertEquals(capacity, host.physicalCapacity());
+        assertEquals(reservation, host.reserved());
+        assertEquals(capacity.subtract(reservation), host.available());
+        assertEquals(capacity, host.snapshot(1L).physicalCapacity());
+        assertEquals(savedBeforeClose, host.save());
+        assertThrows(
+                IllegalStateException.class,
+                () -> host.reconcile(capacity, Map.of()));
+    }
+
+    /** Minecraftを起動しないJUnitでも、ACOのNeoForge Config既定値だけを有効にする。 */
+    private static void loadAcoConfigDefaults() throws ReflectiveOperationException {
+        Class<?> configClass = Class.forName(
+                "com.syaru.ae2craftingoptimizer.config.ACOConfig");
+        Field specField = configClass.getDeclaredField("SPEC");
+        specField.setAccessible(true);
+        ModConfigSpec spec = (ModConfigSpec) specField.get(null);
+        CommentedConfig defaults = CommentedConfig.inMemory();
+        spec.correct(defaults);
+        Class<?> loadedConfigType = Class.forName("net.neoforged.fml.config.LoadedConfig");
+        Constructor<?> constructor = loadedConfigType.getDeclaredConstructor(
+                CommentedConfig.class, Path.class, ModConfig.class);
+        constructor.setAccessible(true);
+        Object loadedConfig = constructor.newInstance(defaults, null, null);
+        Class<?> loadedConfigContract = Class.forName(
+                "net.neoforged.fml.config.IConfigSpec$ILoadedConfig");
+        Method acceptConfig = ModConfigSpec.class.getMethod("acceptConfig", loadedConfigContract);
+        acceptConfig.invoke(spec, loadedConfig);
+    }
+
     /** 公開RegistryだけをReflectionで読み、AQEの任意依存境界を実装JARで検証する。 */
     private static Object findRegistration(Object owner) throws ReflectiveOperationException {
         return findRegistrationOptional(owner).orElseThrow();
@@ -82,7 +133,8 @@ class AcoBigCraftingBackendTest {
         boolean available;
         try {
             available = backend.isAvailable();
-        } catch (IllegalStateException notLoadedYet) {
+        } catch (RuntimeException notLoadedYet) {
+            // JUnit単体環境にはNeoForgeのModListと実Configロードがないため、任意連携試験を飛ばす。
             available = false;
         }
         Assumptions.assumeTrue(

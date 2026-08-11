@@ -36,7 +36,7 @@ public final class AdvancedQuantumEngineering {
         modBus.addListener(this::commonSetup);
         NeoForge.EVENT_BUS.addListener(this::onServerStarted);
         NeoForge.EVENT_BUS.addListener(AQEHostLifecycleEvents::onLevelUnload);
-        NeoForge.EVENT_BUS.addListener(AQEHostLifecycleEvents::onServerStopping);
+        NeoForge.EVENT_BUS.addListener(AQEHostLifecycleEvents::onServerStopped);
     }
 
     private void commonSetup(FMLCommonSetupEvent event) {
