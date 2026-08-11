@@ -168,7 +168,7 @@ Run:
 gradlew.bat clean build
 ```
 
-The generated jar is written under `build/libs/advanced-quantum-engineering-2.2.0.jar`.
+The generated jar is written under `build/libs/aqe2.2.5_1.20.1.jar`.
 
 When cloning outside the original Prism instance, either recreate the expected local `mods` folder layout or replace the dependency coordinates in `build.gradle` with public Maven coordinates.
 

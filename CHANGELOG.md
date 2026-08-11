@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [2.2.5] - 2026-08-12
+
 ### Changed
 
 - Moved Quantum Computer capacity, multiplier, accelerator, and reservation
@@ -12,6 +14,12 @@
   instead of issuing separate reflection getters.
 - Added bounded revision diagnostics for structure scans, reservation rebuilds,
   host snapshot reads, host reconciles, and presentation reuse.
+
+### Fixed
+
+- Delayed optional ACO host release until final world persistence completes.
+- Kept closed hosts readable for final capacity snapshots and NBT persistence
+  while rejecting new reconciliation work.
 
 ## 2.2.3 - 2026-08-08
 
