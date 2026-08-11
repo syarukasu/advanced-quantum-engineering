@@ -3,6 +3,7 @@ package com.syaru.advancedquantumengineering.integration;
 import com.syaru.advancedquantumengineering.config.AQEConfig;
 import java.math.BigInteger;
 import java.util.Arrays;
+import java.util.Optional;
 import java.util.Objects;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
@@ -37,6 +38,38 @@ final class AQEBigCraftingHostState {
 
     static boolean isPresent(CompoundTag tag) {
         return tag != null && !tag.isEmpty();
+    }
+
+    /** Reads only the outer reservation projection; never inspects the backend payload. */
+    static Optional<BigInteger> safeReservedProjection(CompoundTag tag) {
+        if (tag == null || !tag.contains("backendReserved", Tag.TAG_BYTE_ARRAY)) {
+            return Optional.empty();
+        }
+        byte[] encoded = tag.getByteArray("backendReserved");
+        int maximumBytes = (AQEConfig.MAX_BIG_INTEGER_BITS + 8) / 8;
+        if (encoded.length == 0 || encoded.length > maximumBytes) {
+            return Optional.empty();
+        }
+        try {
+            BigInteger value = new BigInteger(encoded);
+            if (value.signum() < 0
+                    || value.bitLength() > AQEConfig.MAX_BIG_INTEGER_BITS
+                    || value.compareTo(AQEConfig.MAX_BIG_INTEGER_VALUE) > 0
+                    || !Arrays.equals(encoded, value.toByteArray())) {
+                return Optional.empty();
+            }
+            return Optional.of(value);
+        } catch (RuntimeException ignored) {
+            return Optional.empty();
+        }
+    }
+
+    static String safeBackendHint(CompoundTag tag) {
+        if (tag == null || !tag.contains("backend", Tag.TAG_STRING)) {
+            return "unknown";
+        }
+        String backend = tag.getString("backend").trim();
+        return backend.isEmpty() || backend.length() > 128 ? "unknown" : backend;
     }
 
     private static void putCount(CompoundTag tag, String key, BigInteger value) {

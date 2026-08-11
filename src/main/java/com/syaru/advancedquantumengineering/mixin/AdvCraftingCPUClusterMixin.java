@@ -10,6 +10,8 @@ import com.syaru.advancedquantumengineering.integration.BigIntegerCapacityMath;
 import com.syaru.advancedquantumengineering.integration.BigIntegerStorageProvider;
 import com.syaru.advancedquantumengineering.integration.AQEHostSnapshot;
 import com.syaru.advancedquantumengineering.integration.AQERevisionMetrics;
+import com.syaru.advancedquantumengineering.integration.AQEHostOwnerToken;
+import com.syaru.advancedquantumengineering.integration.AQEHostRegistration;
 import appeng.api.networking.crafting.ICraftingPlan;
 import appeng.api.networking.crafting.ICraftingSubmitResult;
 import appeng.api.networking.crafting.ICraftingRequester;
@@ -24,6 +26,7 @@ import java.util.UUID;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
+import net.minecraft.world.level.Level;
 import net.pedroksl.advanced_ae.common.cluster.AdvCraftingCPU;
 import net.pedroksl.advanced_ae.common.cluster.AdvCraftingCPUCluster;
 import net.pedroksl.advanced_ae.common.entities.AdvCraftingBlockEntity;
@@ -63,11 +66,20 @@ public abstract class AdvCraftingCPUClusterMixin implements AQEBigIntegerCpuAcce
     private long remainingStorage;
 
     @Shadow
+    public abstract Level getLevel();
+
+    @Shadow
     @Final
     private HashMap<UUID, AdvCraftingCPU> activeCpus;
 
     @Unique
     private AQEBigCraftingHost aqe$bigHost;
+
+    @Unique
+    private AQEHostRegistration aqe$hostRegistration;
+
+    @Unique
+    private long aqe$hostGeneration;
 
     @Unique
     private BigInteger aqe$physicalCapacity = BigInteger.ZERO;
@@ -178,11 +190,18 @@ public abstract class AdvCraftingCPUClusterMixin implements AQEBigIntegerCpuAcce
         CompoundTag saved = data.contains(AQE_BIG_HOST_NBT, Tag.TAG_COMPOUND)
                 ? data.getCompound(AQE_BIG_HOST_NBT).copy()
                 : new CompoundTag();
-        if (aqe$bigHost != null) {
-            aqe$bigHost.close();
-        }
-        aqe$bigHost = BigCraftingIntegration.createHost(this, aqe$calculatePhysicalCapacity(), saved);
+        advancedQuantumEngineering$replaceHost(saved, aqe$calculatePhysicalCapacity());
         advancedQuantumEngineering$recalculateStorageState();
+    }
+
+    @Inject(method = "destroy", at = @At("HEAD"))
+    private void advancedQuantumEngineering$closeHostOnDestroy(CallbackInfo ci) {
+        advancedQuantumEngineering$closeHost();
+    }
+
+    @Inject(method = "breakCluster", at = @At("HEAD"))
+    private void advancedQuantumEngineering$closeHostOnBreak(CallbackInfo ci) {
+        advancedQuantumEngineering$closeHost();
     }
 
     @Override
@@ -278,7 +297,7 @@ public abstract class AdvCraftingCPUClusterMixin implements AQEBigIntegerCpuAcce
         BigInteger physicalCapacity = aqe$cachedPhysicalCapacity;
 
         if (aqe$bigHost == null) {
-            aqe$bigHost = BigCraftingIntegration.createHost(this, physicalCapacity, new CompoundTag());
+            advancedQuantumEngineering$replaceHost(new CompoundTag(), physicalCapacity);
         }
         if (aqe$reconciledStructureRevision != aqe$structureRevision
                 || aqe$reconciledCpuRevision != aqe$activeCpuRevision) {
@@ -296,7 +315,6 @@ public abstract class AdvCraftingCPUClusterMixin implements AQEBigIntegerCpuAcce
             AQERevisionMetrics.recordReservationRebuild();
             AQERevisionMetrics.recordHostReconcile();
         }
-
         this.storage = BigIntegerCapacityMath.saturatedLong(
                 aqe$cachedStorageContributions, AQEConfig.MAX_BIG_INTEGER_BITS);
         this.storageMultiplier = BigIntegerCapacityMath.saturatedLong(
@@ -307,6 +325,45 @@ public abstract class AdvCraftingCPUClusterMixin implements AQEBigIntegerCpuAcce
                 aqe$latestHostSnapshot.available(), AQEConfig.MAX_BIG_INTEGER_BITS);
         this.aqe$physicalCapacity = aqe$latestHostSnapshot.physicalCapacity();
         this.aqe$availableCapacity = aqe$latestHostSnapshot.available();
+    }
+
+    @Unique
+    private synchronized void advancedQuantumEngineering$replaceHost(
+            CompoundTag savedState,
+            BigInteger physicalCapacity) {
+        AQEHostOwnerToken owner = new AQEHostOwnerToken(
+                ++aqe$hostGeneration,
+                advancedQuantumEngineering$lifecycleOwner());
+        AQEBigCraftingHost replacement = BigCraftingIntegration.createHost(
+                owner, physicalCapacity, savedState);
+        AQEHostRegistration replacementRegistration = AQEHostRegistration.open(owner, replacement);
+        AQEHostRegistration previousRegistration = aqe$hostRegistration;
+        aqe$bigHost = replacement;
+        aqe$hostRegistration = replacementRegistration;
+        if (previousRegistration != null) {
+            previousRegistration.closeForReplacement();
+        }
+    }
+
+    @Unique
+    private synchronized void advancedQuantumEngineering$closeHost() {
+        AQEHostRegistration registration = aqe$hostRegistration;
+        aqe$hostRegistration = null;
+        aqe$bigHost = null;
+        if (registration != null) {
+            registration.close();
+        }
+    }
+
+    @Unique
+    private Level advancedQuantumEngineering$lifecycleOwner() {
+        if (!blockEntities.isEmpty()) {
+            Level level = blockEntities.get(0).getLevel();
+            if (level != null) {
+                return level;
+            }
+        }
+        return getLevel();
     }
 
     @Unique

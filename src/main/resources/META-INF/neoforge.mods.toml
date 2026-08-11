@@ -31,21 +31,21 @@ side = "BOTH"
 [[dependencies.advanced_quantum_engineering]]
 modId = "ae2"
 type = "required"
-versionRange = "[19.2.17,19.3.0)"
+versionRange = "[19.2.17,19.2.18)"
 ordering = "AFTER"
 side = "BOTH"
 
 [[dependencies.advanced_quantum_engineering]]
 modId = "advanced_ae"
 type = "required"
-versionRange = "[1.6.11,1.7.0)"
+versionRange = "[1.6.11,1.6.12)"
 ordering = "AFTER"
 side = "BOTH"
 
 [[dependencies.advanced_quantum_engineering]]
 modId = "ae2omnicells"
 type = "required"
-versionRange = "[1.1.6,1.2.0)"
+versionRange = "[1.1.6,1.1.7)"
 ordering = "AFTER"
 side = "BOTH"
 

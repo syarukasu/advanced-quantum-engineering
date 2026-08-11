@@ -5,6 +5,7 @@ import com.syaru.advancedquantumengineering.config.AQEConfig;
 import com.syaru.advancedquantumengineering.integration.AdvancedAEIntegration;
 import com.syaru.advancedquantumengineering.integration.AQEDiagnostics;
 import com.syaru.advancedquantumengineering.integration.BigCraftingIntegration;
+import com.syaru.advancedquantumengineering.integration.AQEHostLifecycleEvents;
 import com.syaru.advancedquantumengineering.integration.OmniCellsIntegration;
 import com.syaru.advancedquantumengineering.registry.AQEBlockEntities;
 import com.syaru.advancedquantumengineering.registry.AQEBlocks;
@@ -34,6 +35,8 @@ public final class AdvancedQuantumEngineering {
 
         modBus.addListener(this::commonSetup);
         NeoForge.EVENT_BUS.addListener(this::onServerStarted);
+        NeoForge.EVENT_BUS.addListener(AQEHostLifecycleEvents::onLevelUnload);
+        NeoForge.EVENT_BUS.addListener(AQEHostLifecycleEvents::onServerStopped);
     }
 
     private void commonSetup(FMLCommonSetupEvent event) {

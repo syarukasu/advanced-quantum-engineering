@@ -5,7 +5,13 @@ import java.util.Map;
 import java.util.UUID;
 import net.minecraft.nbt.CompoundTag;
 
-/** AQE-owned boundary; implementations may be local or supplied by optional ACO integration. */
+/**
+ * AQE-owned boundary; implementations may be local or supplied by optional ACO integration.
+ *
+ * <p>{@link #close()}は新しい会計変更と外部Registry登録を終了する。停止処理中の
+ * 最終BlockEntity保存を壊さないよう、容量getter、{@link #snapshot(long)}、
+ * {@link #save()}はclose後も最後の状態を読み取れる必要がある。</p>
+ */
 public interface AQEBigCraftingHost extends AutoCloseable {
     void reconcile(BigInteger physicalCapacity, Map<UUID, BigInteger> standardJobReservations);
 
@@ -42,6 +48,16 @@ public interface AQEBigCraftingHost extends AutoCloseable {
     /** Big親JobのためにAdvanced AEへ委譲中の子Window数。 */
     default int managedChildJobCount() {
         return 0;
+    }
+
+    /** True while the host is preserving an unverified payload without accepting jobs. */
+    default boolean isPaused() {
+        return false;
+    }
+
+    /** Stable diagnostic state for UI and startup reports. */
+    default String stateHint() {
+        return isPaused() ? "PAUSED" : "ACTIVE";
     }
 
     String backendId();
