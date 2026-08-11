@@ -101,7 +101,7 @@ The same Mixin injects at the head of `AdvCraftingCPUCluster.recalculateRemainin
 
 It also injects at the head of `AdvCraftingCPUCluster.getCoProcessors()` and returns a long-calculated, clamped value. This prevents Advanced AE's `accelerator * acceleratorMultiplier` int multiplication from overflowing when the experimental core is combined with a Multi-Threader. The clamp is `Integer.MAX_VALUE - 1`, which lets AE2 add one execution slot without overflowing.
 
-`TooltipsMixin` injects at the head of AE2 19.2.17's `Tooltips.getByteAmount(long)` only for values at or above one TiB. The byte divisor table stops before the scale used by the AQE CPU, while Advanced AE 1.6.11's CPU selection tooltip calls `Tooltips.ofBytes` for CPU storage. The mixin returns a normal `Tooltips.Amount` using T/P/E units, so very large AQE CPU values render without changing actual storage or crafting behavior.
+`TooltipsMixin` injects at the head of AE2 15.4.10's `Tooltips.getByteAmount(long)` only for values at or above one TiB. The byte divisor table stops before the scale used by the AQE CPU, while Advanced AE 1.3.5's CPU selection tooltip calls `Tooltips.ofBytes` for CPU storage. The mixin returns a normal `Tooltips.Amount` using T/P/E units, so very large AQE CPU values render without changing actual storage or crafting behavior.
 
 `AdvCraftingCPUNameMixin` and `CraftConfirmMenuMixin` attach a display-only capacity snapshot to AE2's existing synchronized CPU-name component. The snapshot comes from the Quantum Computer host Ledger and contains physical, reserved, and available capacity summaries. Each value carries its decimal digit count and at most 19 leading digits. This keeps the marker length fixed instead of serializing a complete value that may contain 16,384 digits. The client list and confirmation Mixins only format this snapshot; they never feed it back into capacity reservation or crafting decisions. A malformed or missing marker falls back to the original AE2/Advanced AE display.
 
@@ -114,7 +114,7 @@ AQE does not require ACO in Gradle or `mods.toml`. The `ae2_crafting_optimizer` 
 `BigCraftingIntegration` selects one of two implementations:
 
 - `LocalBigCraftingHost`: exact aggregate capacity and standard Advanced AE job reservations; opaque ACO state remains paused and reserved.
-- `AcoBigCraftingBackend`: a reflection-only adapter for the tested ACO 1.6.2 API v3 release. It creates or loads an ACO `BigCraftingHostRuntime`, stores the returned `BigCraftingHostRegistration` handle, and shares capacity between standard and native BigInteger reservations.
+- `AcoBigCraftingBackend`: a reflection-only adapter for the tested ACO 1.5.11 API v3 release. It creates or loads an ACO `BigCraftingHostRuntime`, stores the returned `BigCraftingHostRegistration` handle, and shares capacity between standard and native BigInteger reservations.
 
 ACO keeps exact plan and inventory values in ACO-owned sidecars. AQE does not
 inspect those internal sidecars. The registered API v3 host and its explicit
@@ -140,12 +140,12 @@ loadable and report zero optional counts.
 ## Contract and Lifecycle Checks
 
 The versioned contracts are stored in `docs/contracts/1.20.1.json` and
-`docs/contracts/1.21.1.json`. The 1.21.1 test reads the actual Advanced AE,
+`docs/contracts/1.21.1.json`. The 1.20.1 test reads the actual Advanced AE,
 AE2, and Minecraft dependency classes and verifies method descriptors, shadowed
 field types, the single `16` thread-guard constant, and the tooltip target.
 Startup diagnostics repeat the critical method/field checks, require the
 cluster Mixin to be applied before state changes, and reject untested runtime
-dependency versions. The 1.21.1 metadata range is therefore limited to the
+dependency versions. The 1.20.1 metadata range is therefore limited to the
 versions represented by the manifest.
 
 Host ownership is generation-scoped. A reform creates and registers the new
@@ -155,7 +155,7 @@ Pending state is quarantined when a host cannot be saved during teardown.
 
 ## Known Risk
 
-The cluster Mixin targets Advanced AE 1.6.11 bytecode and AE2 19.2.17's
+The cluster Mixin targets Advanced AE 1.3.5 bytecode and AE2 15.4.10's
 public tooltip method. If either dependency changes its descriptors, field types,
 or guard constant, the bytecode contract and fail-fast startup diagnostics stop
 the addon rather than silently producing a fake or unsafe Quantum Computer.

@@ -1,22 +1,22 @@
 # Research
 
-This document describes the current NeoForge 1.21.1 line. The Forge 1.20.1
-research remains on the persistent `mc/1.20.1` branch and is intentionally not
-mixed into this contract.
+This document describes the current Forge 1.20.1 line. The NeoForge 1.21.1
+research is kept on its own branch and is intentionally not mixed into this
+contract.
 
 ## Applied Energistics 2
 
-- JAR: `appliedenergistics2-19.2.17.jar`
+- JAR: `appliedenergistics2-forge-15.4.10.jar`
 - modId: `ae2`
-- Version: `19.2.17`
+- Version: `15.4.10`
 - The relevant common API used here is `appeng.block.crafting.ICraftingUnitType`.
 - `ICraftingUnitType` exposes `getStorageBytes()`, `getAcceleratorThreads()`, and `getItemFromType()`.
 
 ## Advanced AE
 
-- JAR: `AdvancedAE-1.6.11-1.21.1.jar`
+- JAR: `AdvancedAE-1.3.5-1.20.1.jar`
 - modId: `advanced_ae`
-- Version: `1.6.11`
+- Version: `1.3.5`
 - License in `META-INF/mods.toml`: LGPL-3.0
 - Normal Quantum Core registry ID: `advanced_ae:quantum_core`
 - Normal Quantum Core block class: `net.pedroksl.advanced_ae.common.blocks.AAECraftingUnitBlock`
@@ -73,7 +73,7 @@ Advanced AE stores normal active CPU state in `AdvCraftingCPUCluster.writeToNBT`
 
 ## AE2 Omni Cells
 
-- JAR: `ae2omnicells-1.21.1-neoforge-1.1.6.jar`
+- JAR: `ae2omnicells-1.20.1-forge-1.1.6.jar`
 - modId: `ae2omnicells`
 - Version: `1.1.6`
 - License in `META-INF/mods.toml`: LGPL-3.0-or-later
@@ -108,14 +108,14 @@ The modified accelerator defaults to 512 co-processors per block. In the intende
 
 ## BigInteger and Optional ACO Research
 
-AE2 19.2.17 exposes crafting request amounts, plan bytes, executing task counts, and `ICraftingCPU.getAvailableStorage()` as signed `long`. Advanced AE 1.6.11 also stores each `AdvCraftingCPU` compatibility value as an NBT long. Reinterpreting those fields as BigInteger would corrupt normal AE2 interoperability.
+AE2 15.4.10 exposes crafting request amounts, plan bytes, executing task counts, and `ICraftingCPU.getAvailableStorage()` as signed `long`. Advanced AE 1.3.5 also stores each `AdvCraftingCPU` compatibility value as an NBT long. Reinterpreting those fields as BigInteger would corrupt normal AE2 interoperability.
 
 Advanced AE does, however, support multiple `AdvCraftingCPU` jobs inside one Quantum Computer cluster. AQE therefore keeps the structure's total capacity and the sum of all active job reservations as BigInteger while preserving every individual standard job in Advanced AE's original long representation. This makes capacity above `Long.MAX_VALUE` real for aggregate multi-job accounting without replacing normal AE2 jobs.
 
-ACO 1.6.2 provides the explicit API v3 host and generation-safe registration handle for native BigInteger jobs. AQE discovers the adapter only when NeoForge reports the tested version as loaded, then validates the API field and every reflected method. The adapter uses reflection and has no ACO type in AQE's production classpath. Exact inventory sidecars remain implementation details on the ACO side; AQE receives the exact parent reservation through the registered host runtime. If ACO is absent, AQE uses a local exact-capacity ledger. If ACO state is present but the backend is unavailable, its opaque NBT and reservation are preserved instead of discarded.
+ACO 1.5.11 provides the explicit API v3 host and generation-safe registration handle for native BigInteger jobs. AQE discovers the adapter only when Forge reports the tested version as loaded, then validates the API field and every reflected method. The adapter uses reflection and has no ACO type in AQE's production classpath. Exact inventory sidecars remain implementation details on the ACO side; AQE receives the exact parent reservation through the registered host runtime. If ACO is absent, AQE uses a local exact-capacity ledger. If ACO state is present but the backend is unavailable, its opaque NBT and reservation are preserved instead of discarded.
 
 The selected NBT representation is a canonical non-negative two's-complement byte array with a schema version and an exact `10^16384 - 1` hard limit (54,427 bits at the boundary). AQE limits a raw configurable core to 16,372 decimal digits, leaving 12 digits of headroom for structure aggregation and the Data Entangler multiplier. This avoids decimal parsing ambiguity and prevents unbounded allocation from malformed save data.
 
 ## Compatibility Risk
 
-This implementation relies on Advanced AE 1.6.11 keeping `AAEAbstractCraftingUnitBlock.type`, `AAECraftingUnitType.QUANTUM_CORE`, and the virtual `AdvCraftingBlockEntity.getStorageBytes()` / `getAcceleratorThreads()` path. The dependency range is intentionally narrow and is enforced by `docs/contracts/1.21.1.json`, the bytecode test, and startup diagnostics.
+This implementation relies on Advanced AE 1.3.5 keeping `AAEAbstractCraftingUnitBlock.type`, `AAECraftingUnitType.QUANTUM_CORE`, and the virtual `AdvCraftingBlockEntity.getStorageBytes()` / `getAcceleratorThreads()` path. The dependency range is intentionally narrow and is enforced by `docs/contracts/1.20.1.json`, the bytecode test, and startup diagnostics.

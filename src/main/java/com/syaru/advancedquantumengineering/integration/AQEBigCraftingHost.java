@@ -17,6 +17,23 @@ public interface AQEBigCraftingHost extends AutoCloseable {
 
     long availableAsSaturatedLong();
 
+    /** 同一会計世代の容量とジョブ件数を一つの表示用Snapshotへまとめる。 */
+    default AQEHostSnapshot snapshot(long revision) {
+        BigInteger total = physicalCapacity();
+        BigInteger used = reserved();
+        BigInteger available = available();
+        return new AQEHostSnapshot(
+                revision,
+                total,
+                used,
+                available,
+                0L,
+                Math.max(0, bigJobCount()),
+                Math.max(0, managedChildJobCount()),
+                used.compareTo(total) > 0,
+                backendId());
+    }
+
     /** ACOが所有するBigInteger親Job数。任意Backendが未対応なら0を返す。 */
     default int bigJobCount() {
         return 0;

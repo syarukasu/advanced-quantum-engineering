@@ -1,7 +1,6 @@
 package com.syaru.advancedquantumengineering.mixin;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -26,11 +25,11 @@ class AdvancedAeBytecodeContractTest {
             "net.pedroksl.advanced_ae.common.entities.AdvCraftingBlockEntity";
 
     @Test
-    void oneTwentyOneOneDependencyMatchesTheManifest() throws IOException {
-        String manifest = Files.readString(Path.of("docs/contracts/1.21.1.json"));
-        assertTrue(manifest.contains("\"minecraft\": \"1.21.1\""));
-        assertTrue(manifest.contains("\"advanced_ae\": \"1.6.11\""));
-        assertTrue(manifest.contains("\"ae2\": \"19.2.17\""));
+    void oneTwentySourceDependencyMatchesTheManifest() throws IOException {
+        String manifest = Files.readString(Path.of("docs/contracts/1.20.1.json"));
+        assertTrue(manifest.contains("\"minecraft\": \"1.20.1\""));
+        assertTrue(manifest.contains("\"advanced_ae\": \"1.3.5\""));
+        assertTrue(manifest.contains("\"ae2\": \"15.4.10\""));
         assertTrue(manifest.contains("\"match_count\": 1"));
 
         Contract cluster = inspect(CLUSTER);
@@ -41,9 +40,9 @@ class AdvancedAeBytecodeContractTest {
         assertEquals("()V", cluster.methods.get("destroy"));
         assertEquals("()V", cluster.methods.get("breakCluster"));
         assertEquals("()Lnet/minecraft/world/level/Level;", cluster.methods.get("getLevel"));
-        assertEquals("(Lnet/minecraft/nbt/CompoundTag;Lnet/minecraft/core/HolderLookup$Provider;)V",
+        assertEquals("(Lnet/minecraft/nbt/CompoundTag;)V",
                 cluster.methods.get("writeToNBT"));
-        assertEquals("(Lnet/minecraft/nbt/CompoundTag;Lnet/minecraft/core/HolderLookup$Provider;)V",
+        assertEquals("(Lnet/minecraft/nbt/CompoundTag;)V",
                 cluster.methods.get("readFromNBT"));
         assertEquals("I", cluster.fields.get("accelerator"));
         assertEquals("I", cluster.fields.get("acceleratorMultiplier"));
@@ -68,16 +67,16 @@ class AdvancedAeBytecodeContractTest {
     }
 
     @Test
-    void currentContractDoesNotContainTheRetiredOneTwentySourceAssumptions() throws IOException {
+    void currentContractDocumentsTheForgeSourceAssumptions() throws IOException {
         String implementation = Files.readString(Path.of("docs/IMPLEMENTATION.md"));
         String testing = Files.readString(Path.of("docs/TESTING.md"));
         String research = Files.readString(Path.of("docs/RESEARCH.md"));
-        assertFalse(implementation.contains("15.4.10"));
-        assertFalse(implementation.contains("1.3.5"));
-        assertFalse(testing.contains("15.4.10"));
-        assertFalse(testing.contains("1.3.5"));
-        assertFalse(research.contains("15.4.10"));
-        assertFalse(research.contains("1.3.5"));
+        assertTrue(implementation.contains("15.4.10"));
+        assertTrue(implementation.contains("1.3.5"));
+        assertTrue(testing.contains("15.4.10"));
+        assertTrue(testing.contains("1.3.5"));
+        assertTrue(research.contains("15.4.10"));
+        assertTrue(research.contains("1.3.5"));
     }
 
     private static Contract inspect(String className) {

@@ -9,6 +9,7 @@
     "aco_api": 3
   },
   "status": "independent persistent branch; validated by its own Forge build matrix",
+  "match_count": 1,
   "artifact": "aqe<version>_1.20.1.jar",
   "fail_fast": true
 }
