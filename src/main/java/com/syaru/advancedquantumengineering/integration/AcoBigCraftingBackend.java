@@ -25,6 +25,7 @@ public final class AcoBigCraftingBackend implements AQEBigCraftingBackend {
 
     private final Object keyCodec;
     private final Method isEnabled;
+    private final Method isCalculationProfileActive;
     private final Method createHost;
     private final Method loadHost;
     private final Method register;
@@ -53,6 +54,8 @@ public final class AcoBigCraftingBackend implements AQEBigCraftingBackend {
             throw new IllegalStateException("ACO AEKey codec does not implement its advertised API");
         }
         this.isEnabled = apiType.getMethod("isEnabled");
+        // 計算プロファイル照会は新しいACOで追加されたため、古いAPIでは任意メソッドとして扱う。
+        this.isCalculationProfileActive = optionalMethod(apiType, "isCalculationProfileActive");
         this.createHost = apiType.getMethod("createHost", BigInteger.class, keyCodecType);
         this.loadHost = apiType.getMethod(
                 "loadHost", CompoundTag.class, BigInteger.class, keyCodecType);
@@ -68,7 +71,22 @@ public final class AcoBigCraftingBackend implements AQEBigCraftingBackend {
 
     @Override
     public boolean isAvailable() {
-        return (boolean) invoke(isEnabled, null);
+        // サーバー設定でBigInteger機能が無効なら、AQE側もホストを選択しない。
+        if (!(boolean) invoke(isEnabled, null)) {
+            return false;
+        }
+        // 厳密なAE2計算プロファイルが無効なら、long互換経路を二重所有しない。
+        return isCalculationProfileActive == null
+                || (boolean) invoke(isCalculationProfileActive, null);
+    }
+
+    private static Method optionalMethod(Class<?> owner, String name) {
+        try {
+            return owner.getMethod(name);
+        } catch (NoSuchMethodException unsupportedOlderApi) {
+            // 旧ACO APIには照会メソッドがないため、isEnabled()だけで互換判定する。
+            return null;
+        }
     }
 
     @Override
