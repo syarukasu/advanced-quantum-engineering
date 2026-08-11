@@ -27,7 +27,6 @@ public final class AQEDiagnostics {
         logDetectedVersions();
         ok &= checkAe2CompatibilitySurface();
         ok &= checkAdvancedAeApi();
-        ok &= checkExactDependencyVersions();
         ok &= checkRequiredMixinTargets();
         ok &= checkRegisteredUnitTypes();
         logConfiguredPerformance();
@@ -110,14 +109,6 @@ public final class AQEDiagnostics {
         return ok;
     }
 
-    private static boolean checkExactDependencyVersions() {
-        boolean ok = true;
-        ok &= checkExactVersion("ae2", "19.2.17");
-        ok &= checkExactVersion(AdvancedAEIntegration.MODID, "1.6.11");
-        ok &= checkExactVersion(OmniCellsIntegration.MODID, "1.1.6");
-        return ok;
-    }
-
     private static boolean checkRequiredMixinTargets() {
         boolean ok = AQEBigIntegerCpuAccess.class.isAssignableFrom(AdvCraftingCPUCluster.class);
         if (!ok) {
@@ -126,19 +117,6 @@ public final class AQEDiagnostics {
                     AdvCraftingCPUCluster.class.getName());
         }
         return ok;
-    }
-
-    private static boolean checkExactVersion(String modId, String expected) {
-        String actual = getVersion(modId);
-        if (expected.equals(actual)) {
-            return true;
-        }
-        AdvancedQuantumEngineering.LOGGER.error(
-                "AQE compatibility contract mismatch for {}: expected {}, found {}",
-                modId,
-                expected,
-                actual);
-        return false;
     }
 
     private static boolean hasMethod(Class<?> owner, String name) {

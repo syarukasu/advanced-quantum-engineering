@@ -160,7 +160,7 @@ and Data Entangler multiplication.
 
 Run every case on a copied world before enabling experimental ACO execution paths. Do not treat `gradlew test` alone as full runtime qualification.
 
-1. AQE 2.2.4 without ACO on Forge 1.20.1 / Advanced AE 1.3.5 / AE2 15.4.10:
+1. AQE 2.2.4 without ACO on Forge 1.20.1 / Advanced AE 1.3.5 or 1.3.6 / AE2 15.4.10:
    - client and dedicated server start;
    - BigInteger core forms the original Advanced AE structure;
    - multiple standard crafting jobs run concurrently;

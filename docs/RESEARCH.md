@@ -16,7 +16,7 @@ contract.
 
 - JAR: `AdvancedAE-1.3.5-1.20.1.jar`
 - modId: `advanced_ae`
-- Version: `1.3.5`
+- Version: `1.3.5` baseline; runtime dependency metadata also accepts `1.3.6`
 - License in `META-INF/mods.toml`: LGPL-3.0
 - Normal Quantum Core registry ID: `advanced_ae:quantum_core`
 - Normal Quantum Core block class: `net.pedroksl.advanced_ae.common.blocks.AAECraftingUnitBlock`
@@ -118,4 +118,4 @@ The selected NBT representation is a canonical non-negative two's-complement byt
 
 ## Compatibility Risk
 
-This implementation relies on Advanced AE 1.3.5 keeping `AAEAbstractCraftingUnitBlock.type`, `AAECraftingUnitType.QUANTUM_CORE`, and the virtual `AdvCraftingBlockEntity.getStorageBytes()` / `getAcceleratorThreads()` path. The dependency range is intentionally narrow and is enforced by `docs/contracts/1.20.1.json`, the bytecode test, and startup diagnostics.
+This implementation relies on the Advanced AE 1.3.5 bytecode baseline keeping `AAEAbstractCraftingUnitBlock.type`, `AAECraftingUnitType.QUANTUM_CORE`, and the virtual `AdvCraftingBlockEntity.getStorageBytes()` / `getAcceleratorThreads()` path. The Forge metadata accepts only the 1.3.5 and 1.3.6 releases; API and Mixin target checks remain enabled, while exact version equality is intentionally not checked at runtime.

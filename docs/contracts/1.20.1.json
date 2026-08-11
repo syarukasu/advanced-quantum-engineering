@@ -5,6 +5,7 @@
   "dependencies": {
     "ae2": "15.4.10",
     "advanced_ae": "1.3.5",
+    "advanced_ae_supported": ["1.3.5", "1.3.6"],
     "ae2omnicells": "1.1.6",
     "aco_api": 3
   },
