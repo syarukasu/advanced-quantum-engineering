@@ -127,6 +127,7 @@ dependencies {
             throw new GradleException("ACO contract JAR is missing: ${acoJar}")
         }
         def acoArchive = new java.util.jar.JarFile(acoJar)
+        String acoContractVersion
         try {
             def metadataEntry = acoArchive.getJarEntry('META-INF/mods.toml')
             if (metadataEntry == null) {
@@ -136,11 +137,37 @@ dependencies {
             if (!metadata.contains('modId = "ae2_crafting_optimizer"')) {
                 throw new GradleException("ACO contract JAR has unexpected mod metadata: ${acoJar}")
             }
+            acoContractVersion = acoArchive.manifest.mainAttributes
+                    .getValue('Implementation-Version')
+            if (acoContractVersion == null || acoContractVersion.isBlank()) {
+                throw new GradleException("ACO contract JAR has no Implementation-Version: ${acoJar}")
+            }
         } finally {
             acoArchive.close()
         }
-        compileOnly files(acoJar)
-        testRuntimeOnly files(acoJar)
+        // 配布用ACO JARは本番難読化名を含むため、開発・JUnit環境へ載せる前に
+        // ForgeGradleで公式mappingへ戻す。FileCollectionはFGの変換対象にならないので、
+        // 配布JARの親をflatDirとして登録し、module dependencyとして解決する。
+        repositories.ivy {
+            name = 'LocalAcoContract'
+            url = acoJar.parentFile.toURI()
+            patternLayout {
+                // ファイル名自体をartifact名として使い、任意の配布JAR名を再命名せず解決する。
+                artifact '[artifact].[ext]'
+            }
+            metadataSources {
+                artifact()
+            }
+            content {
+                includeGroup 'local.aco.contract'
+            }
+        }
+        def acoModuleName = acoJar.name.substring(0, acoJar.name.length() - '.jar'.length())
+        def acoModule = project.dependencies.create(
+                "local.aco.contract:${acoModuleName}:${acoContractVersion}")
+        def deobfuscatedAco = fg.deobf(acoModule)
+        compileOnly deobfuscatedAco
+        testRuntimeOnly deobfuscatedAco
     }
 
     testImplementation platform('org.junit:junit-bom:5.10.3')
