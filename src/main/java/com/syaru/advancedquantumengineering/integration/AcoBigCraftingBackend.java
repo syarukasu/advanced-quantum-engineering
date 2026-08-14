@@ -29,6 +29,7 @@ public final class AcoBigCraftingBackend implements AQEBigCraftingBackend {
     private final Method createHost;
     private final Method loadHost;
     private final Method register;
+    private final Method registerExternalPlanConsumer;
     private final Method unregister;
     private final Method registrationClose;
     private final RuntimeMethods runtimeMethods;
@@ -60,6 +61,9 @@ public final class AcoBigCraftingBackend implements AQEBigCraftingBackend {
         this.loadHost = apiType.getMethod(
                 "loadHost", CompoundTag.class, BigInteger.class, keyCodecType);
         this.register = registryType.getMethod("register", Object.class, hostType);
+        this.registerExternalPlanConsumer = optionalMethod(
+                apiType,
+                "registerExternalBigIntegerPlanConsumer");
         this.unregister = registryType.getMethod("unregister", Object.class);
         Class<?> registrationType = Class.forName(
                 "com.syaru.ae2craftingoptimizer.api.big.BigCraftingHostRegistration",
@@ -67,6 +71,10 @@ public final class AcoBigCraftingBackend implements AQEBigCraftingBackend {
                 loader);
         this.registrationClose = registrationType.getMethod("close");
         this.runtimeMethods = new RuntimeMethods(hostType);
+        // AQEがBigInteger提出境界を所有することをACOへ能力として通知する。
+        if (registerExternalPlanConsumer != null) {
+            invoke(registerExternalPlanConsumer, null);
+        }
     }
 
     @Override
