@@ -19,7 +19,7 @@ Supports upstream-compatible AE2 15.4.10 and AE2 Unofficial Extended Life Modern
 [[dependencies.advanced_quantum_engineering]]
 modId = "forge"
 mandatory = true
-versionRange = "[47.4.18,)"
+versionRange = "[47.4,47.5)"
 ordering = "NONE"
 side = "BOTH"
 
