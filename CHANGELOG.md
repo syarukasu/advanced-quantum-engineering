@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+## [2.2.6] - 2026-08-15
+
+### Changed
+
+- Registers AQE's optional BigInteger CPU host through ACO 1.5.19's public
+  external-consumer boundary when that API is available.
+- Keeps AQE responsible for its own CPU execution, reservations, progress,
+  cancellation, persistence, and GUI while ACO only supplies exact plans.
+
+### Compatibility
+
+- Remains loadable without ACO and with earlier ACO 1.5.x builds; exact
+  external-consumer registration activates only when the new API is present.
+
 ## [2.2.5] - 2026-08-12
 
 ### Changed
