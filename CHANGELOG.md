@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+## [2.2.7] - 2026-08-20
+
+### Fixed
+
+- Removed the exclusive redirect from the standard AE2 CPU selection tooltip.
+- AQE now replaces only the completed storage line identified by its
+  translation key, allowing NeoECO and other tooltip contributors to coexist.
+- Preserved AQE's exact BigInteger capacity display without changing normal
+  CPU names, coprocessor lines, status lines, or Advanced AE's custom list.
+
 ## [2.2.6] - 2026-08-15
 
 ### Changed
