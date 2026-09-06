@@ -151,12 +151,14 @@ AE2 network/crafting optimizations are handled by the separate `ae2-crafting-opt
 `ae2-crafting-optimizer` is not a required dependency.
 
 - AQE without ACO: the BigInteger core forms normally, exact aggregate capacity is retained, and standard AE2/Advanced AE jobs remain supported.
-- AQE with compatible ACO `[1.3.0,1.6.0)` releases: AQE reflectively activates ACO BigInteger host API v3. Standard long jobs and exact BigInteger parent jobs share one physical capacity ledger. ACO divides a deterministic parent into recipe-specific checked-long child windows and keeps their reservations tied to the parent.
+- AQE with compatible ACO `[1.3.0,3.0.0)` releases: AQE reflectively activates ACO BigInteger host API v3. Standard jobs and exact reservations share one physical capacity ledger. ACO 1.x keeps its existing handoff; AQE does not install another executor over it.
+- ACO 2.0 wide jobs additionally require physical execution API v1 from [ACO #182](https://github.com/syarukasu/ae2-crafting-optimizer/issues/182). Capacity-only overflow keeps Advanced AE's native executor after exact capacity validation. Count overflow uses the existing receipt-backed transaction, with AQE owning its CPU lifecycle. Older ACO 2.0 development artifacts without that API are rejected before input transfer.
+- The count-wide physical route currently accepts player-submitted deterministic crafting-table plans with loaded receipt-backed workers and audited exact storage for both boundary inputs and outputs. Previously stalled legacy orders are not reconstructed automatically.
 - ACO present but disabled: AQE uses its local long-compatible backend.
 - ACO removed while native BigInteger state exists: AQE preserves the opaque versioned NBT and keeps its reservation unavailable, preventing double spending. Reinstalling compatible ACO restores the state.
 - Unsupported ACO version: the default fail-fast diagnostic stops loading instead of discarding or misreading saved state.
 
-AQE contains no direct ACO class reference or Gradle dependency. The optional adapter resolves and validates API v3 only after Forge reports a compatible ACO `[1.3.0,1.6.0)` release as loaded. ACO 1.5 keeps exact BigInteger plan and inventory values in its own sidecars; AQE receives only the registered API v3 host and does not depend on those internal classes.
+AQE has no required ACO runtime dependency. Its adapters resolve public APIs reflectively after Forge reports a compatible ACO release. The ACO 2.0 adapter uses the public plan view, host API v3 and physical execution API v1; it does not import ACO engine classes. An optional `acoJar` build property supplies ACO for contract tests. Implementation and unverified runtime checks are recorded in [Issue #33](https://github.com/syarukasu/advanced-quantum-engineering/issues/33).
 
 ## Build
 

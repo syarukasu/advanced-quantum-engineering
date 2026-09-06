@@ -12,6 +12,13 @@ import com.syaru.advancedquantumengineering.integration.AQEHostSnapshot;
 import com.syaru.advancedquantumengineering.integration.AQERevisionMetrics;
 import com.syaru.advancedquantumengineering.integration.AQEHostOwnerToken;
 import com.syaru.advancedquantumengineering.integration.AQEHostRegistration;
+import com.syaru.advancedquantumengineering.integration.AqePhysicalExecution;
+import com.syaru.advancedquantumengineering.integration.AqeExactCpuAccess;
+import appeng.crafting.CraftingPlan;
+import appeng.crafting.execution.CraftingSubmitResult;
+import appeng.api.stacks.KeyCounter;
+import net.pedroksl.advanced_ae.common.logic.AdvCraftingCPULogic;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import appeng.api.networking.crafting.ICraftingPlan;
 import appeng.api.networking.crafting.ICraftingSubmitResult;
 import appeng.api.networking.crafting.ICraftingRequester;
@@ -143,6 +150,65 @@ public abstract class AdvCraftingCPUClusterMixin implements AQEBigIntegerCpuAcce
     @Unique
     private boolean aqe$reportedOverbookedDisplayLedger;
 
+    @Unique
+    private AqePhysicalExecution.Submission aqe$pendingSubmission;
+
+    @Unique
+    private int aqe$ownExactJobs;
+
+    @Inject(method = "submitJob", at = @At("HEAD"), cancellable = true)
+    private void aqe$prepareExactSubmission(IGrid grid, ICraftingPlan plan, IActionSource source,
+            ICraftingRequester requester, CallbackInfoReturnable<ICraftingSubmitResult> cir) {
+        aqe$pendingSubmission = null;
+        if (!((AdvCraftingCPUCluster) (Object) this).isActive()) return;
+        try {
+            var prepared = AqePhysicalExecution.prepare(plan, UUID.randomUUID(), grid, getLevel(), source);
+            if (prepared == null) return;
+            if (requester != null && prepared.physical() != null) {
+                throw new IllegalArgumentException("exact physical requests currently require a player order");
+            }
+            if (prepared.bytes().compareTo(aqe$getAvailableCraftingCapacity()) > 0) {
+                cir.setReturnValue(CraftingSubmitResult.CPU_TOO_SMALL);
+                return;
+            }
+            aqe$pendingSubmission = prepared;
+        } catch (RuntimeException | LinkageError failure) {
+            AdvancedQuantumEngineering.LOGGER.warn("AQE declined an exact job before input transfer: {}",
+                    failure.toString());
+            cir.setReturnValue(CraftingSubmitResult.INCOMPLETE_PLAN);
+        }
+    }
+
+    @Redirect(method = "submitJob", at = @At(value = "INVOKE",
+            target = "Lappeng/api/networking/crafting/ICraftingPlan;bytes()J"))
+    private long aqe$useApprovedCapacityFacade(ICraftingPlan plan) {
+        // Issue #33: only an exact-capacity-approved order bypasses the long gate.
+        return aqe$pendingSubmission == null ? plan.bytes() : 1L;
+    }
+
+    @Redirect(method = "submitJob", at = @At(value = "INVOKE",
+            target = "Lnet/pedroksl/advanced_ae/common/logic/AdvCraftingCPULogic;trySubmitJob(Lappeng/api/networking/IGrid;Lappeng/api/networking/crafting/ICraftingPlan;Lappeng/api/networking/security/IActionSource;Lappeng/api/networking/crafting/ICraftingRequester;)Lappeng/api/networking/crafting/ICraftingSubmitResult;"))
+    private ICraftingSubmitResult aqe$submitApprovedJob(AdvCraftingCPULogic logic, IGrid grid,
+            ICraftingPlan plan, IActionSource source, ICraftingRequester requester) {
+        var prepared = aqe$pendingSubmission;
+        if (prepared == null) return logic.trySubmitJob(grid, plan, source, requester);
+        try {
+            boolean physical = prepared.physical() != null;
+            CraftingPlan facade = new CraftingPlan(plan.finalOutput(), 1L, false, plan.multiplePaths(),
+                    physical ? new KeyCounter() : plan.usedItems(),
+                    physical ? new KeyCounter() : plan.emittedItems(), new KeyCounter(),
+                    physical ? Map.of() : plan.patternTimes());
+            var result = logic.trySubmitJob(grid, facade, source, requester);
+            if (result.successful()) {
+                ((AqeExactCpuAccess) logic).aqe$installExactSubmission(prepared);
+                advancedQuantumEngineering$markActiveCpuDirty();
+            }
+            return result;
+        } finally {
+            aqe$pendingSubmission = null;
+        }
+    }
+
     @ModifyConstant(method = "addBlockEntity", constant = @Constant(intValue = 16))
     private int advancedQuantumEngineering$raiseSingleUnitThreadLimit(int original) {
         return Math.max(original, AQEConfig.getMaxSingleUnitCoprocessors());
@@ -253,7 +319,8 @@ public abstract class AdvCraftingCPUClusterMixin implements AQEBigIntegerCpuAcce
             available = BigInteger.ZERO;
         }
         long standardJobsLong = hostSnapshot == null ? activeCpus.size() : hostSnapshot.standardJobCount();
-        long bigJobsLong = hostSnapshot == null ? 0L : hostSnapshot.bigJobCount();
+        long bigJobsLong = (hostSnapshot == null ? 0L : hostSnapshot.bigJobCount()) + aqe$ownExactJobs;
+        standardJobsLong = Math.max(0L, standardJobsLong - aqe$ownExactJobs);
         int bigJobs = clampDisplayCount(bigJobsLong);
         // ACO子WindowはBig親Jobの内部実装なので、通常Job件数との二重表示から除外する。
         long combinedJobs = safeDisplayAdd(Math.max(0L, standardJobsLong), bigJobsLong);
@@ -298,13 +365,18 @@ public abstract class AdvCraftingCPUClusterMixin implements AQEBigIntegerCpuAcce
         if (aqe$reconciledStructureRevision != aqe$structureRevision
                 || aqe$reconciledCpuRevision != aqe$activeCpuRevision) {
             Map<UUID, BigInteger> reservations = new LinkedHashMap<>();
+            int exactJobs = 0;
             for (var entry : activeCpus.entrySet()) {
                 AdvCraftingCPU cpu = entry.getValue();
                 if (cpu != null && cpu.getAvailableStorage() > 0L) {
-                    reservations.put(entry.getKey(), BigInteger.valueOf(cpu.getAvailableStorage()));
+                    BigInteger exact = ((AqeExactCpuAccess) cpu.craftingLogic).aqe$exactReservation();
+                    reservations.put(entry.getKey(), exact == null
+                            ? BigInteger.valueOf(cpu.getAvailableStorage()) : exact);
+                    if (exact != null) exactJobs++;
                 }
             }
             aqe$bigHost.reconcile(physicalCapacity, reservations);
+            aqe$ownExactJobs = exactJobs;
             aqe$reconciledStructureRevision = aqe$structureRevision;
             aqe$reconciledCpuRevision = aqe$activeCpuRevision;
             aqe$hostRevision = nextRevision(aqe$hostRevision);

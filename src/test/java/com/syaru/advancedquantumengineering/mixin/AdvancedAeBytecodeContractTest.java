@@ -52,6 +52,14 @@ class AdvancedAeBytecodeContractTest {
         assertEquals("Ljava/util/HashMap;", cluster.fields.get("activeCpus"));
         assertEquals("Ljava/util/List;", cluster.fields.get("blockEntities"));
         assertEquals(1, cluster.singleUnitThreadGuardMatches);
+        assertEquals(2, cluster.submitCapacityReads);
+        assertEquals(1, cluster.submitLogicCalls);
+        Contract logic = inspect("net.pedroksl.advanced_ae.common.logic.AdvCraftingCPULogic");
+        assertEquals("(Lappeng/api/networking/energy/IEnergyService;Lappeng/me/service/CraftingService;)V",
+                logic.methods.get("tickCraftingLogic"));
+        assertEquals("(Z)V", logic.methods.get("finishJob"));
+        assertEquals("(Lappeng/api/stacks/AEKey;)V", logic.methods.get("postChange"));
+        assertEquals("(Lappeng/api/stacks/KeyCounter;)V", logic.methods.get("getAllItems"));
 
         Contract blockEntity = inspect(BLOCK_ENTITY);
         assertEquals("()J", blockEntity.methods.get("getStorageBytes"));
@@ -97,6 +105,18 @@ class AdvancedAeBytecodeContractTest {
                 public MethodVisitor visitMethod(
                         int access, String name, String descriptor, String signature, String[] exceptions) {
                     contract.methods.put(name, descriptor);
+                    if ("submitJob".equals(name)) {
+                        return new MethodVisitor(Opcodes.ASM9) {
+                            @Override
+                            public void visitMethodInsn(int opcode, String owner, String method,
+                                    String desc, boolean isInterface) {
+                                if (owner.equals("appeng/api/networking/crafting/ICraftingPlan")
+                                        && method.equals("bytes") && desc.equals("()J")) contract.submitCapacityReads++;
+                                if (owner.equals("net/pedroksl/advanced_ae/common/logic/AdvCraftingCPULogic")
+                                        && method.equals("trySubmitJob")) contract.submitLogicCalls++;
+                            }
+                        };
+                    }
                     if ("addBlockEntity".equals(name)) {
                         return new MethodVisitor(Opcodes.ASM9) {
                             @Override
@@ -127,5 +147,7 @@ class AdvancedAeBytecodeContractTest {
         private final Map<String, String> methods = new HashMap<>();
         private final Map<String, String> fields = new HashMap<>();
         private int singleUnitThreadGuardMatches;
+        private int submitCapacityReads;
+        private int submitLogicCalls;
     }
 }
