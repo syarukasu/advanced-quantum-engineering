@@ -9,7 +9,7 @@ import java.util.Objects;
 import java.util.UUID;
 import net.minecraft.nbt.CompoundTag;
 
-/** 互換範囲内の任意ACO 1.3.xから1.5.x API v3がある場合だけReflectionで読み込む。 */
+/** 互換範囲内の任意ACO BigInteger API v3をReflectionで読み込む。 */
 public final class AcoBigCraftingBackend implements AQEBigCraftingBackend {
     private static final int REQUIRED_API_VERSION = 3;
     private static final String API_CLASS =
@@ -173,6 +173,7 @@ public final class AcoBigCraftingBackend implements AQEBigCraftingBackend {
             Method available,
             Method availableAsSaturatedLong,
             Method bigReserved,
+            Method externalReservations,
             Method bigJobCount,
             Method managedChildJobCount,
             Method save) {
@@ -185,6 +186,7 @@ public final class AcoBigCraftingBackend implements AQEBigCraftingBackend {
                     hostType.getMethod("available"),
                     hostType.getMethod("availableAsSaturatedLong"),
                     hostType.getMethod("bigReserved"),
+                    optionalMethod(hostType, "externalReservations"),
                     optionalMethod(hostType, "bigJobCount"),
                     optionalMethod(hostType, "managedChildJobCount"),
                     hostType.getMethod("save"));
@@ -209,6 +211,7 @@ public final class AcoBigCraftingBackend implements AQEBigCraftingBackend {
         private final Method unregister;
         private final RuntimeMethods methods;
         private boolean closed;
+        private int standardJobCount;
 
         private Host(
                 Object owner,
@@ -235,6 +238,22 @@ public final class AcoBigCraftingBackend implements AQEBigCraftingBackend {
             synchronized (runtime) {
                 invoke(methods.resizePhysicalCapacity(), runtime, physicalCapacity);
                 invoke(methods.replaceExternalReservations(), runtime, standardJobReservations);
+                standardJobCount = standardJobReservations.size();
+            }
+        }
+
+        @Override
+        public AQEHostSnapshot snapshot(long revision) {
+            // Issue #33: read reservations and job counts under the same host lock.
+            synchronized (runtime) {
+                AQEHostSnapshot values = AQEBigCraftingHost.super.snapshot(revision);
+                Method reservations = methods.externalReservations();
+                long jobs = reservations == null ? standardJobCount
+                        : ((Map<?, ?>) invoke(reservations, runtime)).size();
+                return new AQEHostSnapshot(revision, values.physicalCapacity(),
+                        values.reserved(), values.available(), jobs,
+                        values.bigJobCount(), values.managedChildJobCount(),
+                        values.overcommitted(), values.backendState());
             }
         }
 

@@ -80,6 +80,7 @@ class AcoBigCraftingBackendTest {
         BigInteger reservation = BigInteger.TEN.pow(32);
         AQEBigCraftingHost host = backend.create(owner, capacity, new CompoundTag());
         host.reconcile(capacity, Map.of(UUID.randomUUID(), reservation));
+        assertEquals(1L, host.snapshot(1L).standardJobCount());
         CompoundTag savedBeforeClose = host.save();
 
         host.close();
