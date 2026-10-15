@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+## [2.2.8] - 2026-10-15
+
+### Fixed (NeoForge 1.21.1)
+
+- Accept ACO 2.x, including the 2.0 refs.8 snapshot, alongside the supported 1.5.x line. Keep ACO optional and validate its public BigInteger API v3.
+- Remove the redundant exact-version-string check that rejected Advanced AE 1.6.11-1.21.1. Preserve NeoForge dependency ranges and API/Mixin validation.
+- Declare AQE Mixins in NeoForge metadata.
+- ACO 2.0を拒否する古い依存条件と、Advanced AEの正式な版表記を誤って拒否する起動判定を修正しました。
+- NeoForge標準のMixin宣言を追加しました。容量・搬入出・クラフト会計・保存形式は変更しません。
+
 ## [2.2.7] - 2026-08-20
 
 ### Fixed

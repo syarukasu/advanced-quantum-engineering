@@ -1,10 +1,19 @@
 # Advanced Quantum Engineering
 
-Advanced Quantum Engineering 2.3.1 adds upgraded Advanced AE Quantum Computer parts that use the original Quantum Computer multiblock system.
+Advanced Quantum Engineering 2.2.8 adds upgraded Advanced AE Quantum Computer parts that use the original Quantum Computer multiblock system.
 
-This release targets Minecraft 1.21.1, NeoForge 21.1.247+, Java 21, Applied Energistics 2 19.2.17, Advanced AE 1.6.11-1.21.1, and AE2 Omni Cells 1.1.6. The persistent branch is `mc/1.21.1`, and its artifact is named `aqe<version>_1.21.1.jar`. AQE 2.2.x remains the independent Forge 1.20.1 line on `mc/1.20.1`, with artifacts named `aqe<version>_1.20.1.jar`.
+This release targets Minecraft 1.21.1, NeoForge 21.1.247+, Java 21, Applied Energistics 2 19.2.17, Advanced AE 1.6.11-1.21.1, and AE2 Omni Cells 1.1.6. Its artifact is named `aqe<version>_1.21.1.jar`. The independent Forge 1.20.1 line remains unchanged by this release.
 
-AE2 crafting and synchronization optimization code is intentionally not part of this mod. It lives in the separate `ae2-crafting-optimizer` project so Quantum Computer block behavior and AE2 optimization behavior can be tested independently. Compatible ACO 1.5.9 releases are optional: AQE runs without ACO and uses its versioned BigInteger host API when it is present and enabled.
+AE2 crafting and synchronization optimization code is intentionally not part of this mod. It lives in the separate `ae2-crafting-optimizer` project so Quantum Computer block behavior and AE2 optimization behavior can be tested independently. ACO 1.5.9 through 1.5.x and ACO 2.x (including the refs.8 snapshot) are optional: AQE runs without ACO and validates its public BigInteger API v3 when it is present. ACO 2.0 remains an Alpha snapshot; this compatibility fix does not certify huge-job completion, cancellation/refunds, restart recovery, concurrent orders or planning performance.
+
+## 2.2.8 Compatibility Fix / 日本語
+
+- Accepts ACO 2.0 snapshots without rejecting the existing supported ACO 1.5.x line.
+- Removes the duplicate exact-version-string startup check that rejected Advanced AE's valid `1.6.11-1.21.1` suffix. NeoForge dependency ranges and API/Mixin checks remain in place.
+- Registers AQE Mixins through NeoForge's standard mod metadata.
+- ACO 2.0との併用を拒否していた古い依存条件を修正しました。対応するACO 1.5.xとの互換性も維持します。
+- Advanced AEの正式なバージョン表記を誤って拒否する二重判定を解消し、NeoForge用Mixin宣言を追加しました。
+- 1.21.1用の互換修正です。計算器・容量・搬入速度・保存形式の変更ではありません。
 
 The optional ACO compile contract is supplied explicitly with
 `-PacoJar=/absolute/path/to/aco<version>_<mc>.jar`; AQE never inspects a fixed

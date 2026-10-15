@@ -14,6 +14,9 @@ Adds Astral-scale upgraded Advanced AE Quantum Computer parts while preserving
 Advanced AE's original multiblock rules. ACO is an optional BigInteger backend.
 '''
 
+[[mixins]]
+config = "advanced_quantum_engineering.mixins.json"
+
 [[dependencies.advanced_quantum_engineering]]
 modId = "neoforge"
 type = "required"
@@ -52,6 +55,6 @@ side = "BOTH"
 [[dependencies.advanced_quantum_engineering]]
 modId = "ae2_crafting_optimizer"
 type = "optional"
-versionRange = "[1.5.9,1.6.0)"
+versionRange = "[1.5.9,1.6.0),[2.0.0-rc.1,3.0.0)"
 ordering = "AFTER"
 side = "BOTH"

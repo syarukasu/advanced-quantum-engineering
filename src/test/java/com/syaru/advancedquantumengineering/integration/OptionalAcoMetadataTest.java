@@ -1,17 +1,21 @@
 package com.syaru.advancedquantumengineering.integration;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
+import org.apache.maven.artifact.versioning.VersionRange;
 import org.junit.jupiter.api.Test;
 
 class OptionalAcoMetadataTest {
     @Test
     void runtimeContractMatchesOptionalDependencyMetadata() throws IOException {
-        assertEquals("[1.5.9,1.6.0)", BigCraftingIntegration.SUPPORTED_ACO_VERSION_RANGE);
+        assertEquals("[1.5.9,1.6.0),[2.0.0-rc.1,3.0.0)",
+                BigCraftingIntegration.SUPPORTED_ACO_VERSION_RANGE);
 
         String metadata;
         try (InputStream input = getClass().getClassLoader()
@@ -33,5 +37,19 @@ class OptionalAcoMetadataTest {
         assertTrue(
                 metadata.contains("ACO is an optional BigInteger backend"),
                 "mod description must explain the optional ACO backend");
+    }
+
+    @Test
+    void acceptsLegacyAndSnapshotAcoWithoutAdmittingUnsupportedMajorVersions() throws Exception {
+        VersionRange supported = VersionRange.createFromVersionSpec(
+                BigCraftingIntegration.SUPPORTED_ACO_VERSION_RANGE);
+        for (String version : new String[] {
+                "1.5.9", "1.5.33", "2.0.0-rc.4", "2.0.0-snapshot-refs.8", "2.0.0"
+        }) {
+            assertTrue(supported.containsVersion(new DefaultArtifactVersion(version)), version);
+        }
+        for (String version : new String[] {"1.5.8", "1.6.0", "3.0.0"}) {
+            assertFalse(supported.containsVersion(new DefaultArtifactVersion(version)), version);
+        }
     }
 }
