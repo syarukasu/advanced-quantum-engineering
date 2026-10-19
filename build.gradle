@@ -167,11 +167,8 @@ dependencies {
                 "local.aco.contract:${acoModuleName}:${acoContractVersion}")
         def deobfuscatedAco = fg.deobf(acoModule)
         compileOnly deobfuscatedAco
-        testRuntimeOnly deobfuscatedAco
     }
 
-    testImplementation platform('org.junit:junit-bom:5.10.3')
-    testImplementation 'org.junit.jupiter:junit-jupiter'
 }
 
 tasks.withType(JavaCompile).configureEach {
@@ -192,9 +189,6 @@ tasks.named('check') {
     dependsOn 'verifyAe2Profile'
 }
 
-test {
-    useJUnitPlatform()
-}
 
 processResources {
     inputs.property 'version', project.version
